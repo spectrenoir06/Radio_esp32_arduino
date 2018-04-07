@@ -1,9 +1,10 @@
 
-#include "SPI.h"
-#include "Adafruit_GFX.h"
-#include "Adafruit_ILI9341.h"
+#include <SPI.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_ILI9341.h>
 #include <Adafruit_NeoPixel.h>
-#include "RF24.h"
+#include <Adafruit_MCP3008.h>
+#include <RF24.h>
 #include <XPT2046_Touchscreen.h>
 
 #define NEOPIXEL_PIN 5
@@ -11,6 +12,8 @@
 #define TFT_DC 2
 #define TFT_CS 15
 #define TOUCH_CS 4
+
+#define ADC_CS 21
 
 #define NRF24_CE 26
 #define NRF24_CS 26
@@ -23,7 +26,9 @@
 //#define USE_RADIO
 #define USE_TFT
 #define USE_LED
-#define USE_INT_ADC
+//#define USE_INT_ADC
+#define USE_EXT_ADC
+
 
 uint8_t addresses[5] = {0xe7,0xe7,0xe7,0xe7,0xe7};
 // uint8_t data[PAYLOAD_SIZE];
@@ -35,7 +40,7 @@ uint16_t adc_value[8];
 #endif
 
 #ifdef USE_TFT
-	Adafruit_ILI9341 tft   = Adafruit_ILI9341(TFT_CS, TFT_DC);
+	Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
 	XPT2046_Touchscreen ts(TOUCH_CS);
 #endif
 
@@ -43,6 +48,9 @@ uint16_t adc_value[8];
 	Adafruit_NeoPixel leds = Adafruit_NeoPixel(1, NEOPIXEL_PIN, NEO_GRB + NEO_KHZ800);
 #endif
 
+#ifdef USE_EXT_ADC
+	Adafruit_MCP3008 adc;
+#endif
 
 void setup() {
 	Serial.begin(115200);
@@ -83,13 +91,16 @@ void setup() {
 
 		radio.powerUp();
 		radio.printDetails();
-
 	#endif
 
 	#ifdef USE_TFT
 		tft.begin();
 		tft.fillScreen(ILI9341_BLACK);
 		ts.begin();
+	#endif
+
+	#ifdef USE_EXT_ADC
+		adc.begin(ADC_CS);
 	#endif
 }
 
@@ -102,10 +113,18 @@ void loop() {
 	#endif
 
 	#ifdef USE_INT_ADC
-		adc_value[0] = analogRead(36);
-		adc_value[1] = analogRead(39);
-		adc_value[2] = analogRead(34);
-		adc_value[3] = analogRead(35);
+		adc_value[0] = analogRead(36)>>2;
+		adc_value[1] = analogRead(39)>>2;
+		adc_value[2] = analogRead(34)>>2;
+		adc_value[3] = analogRead(35)>>2;
+	#endif
+
+	#ifdef USE_EXT_ADC
+		for (int chan = 0; chan < 8; chan++) {
+			adc_value[chan] = adc.readADC(chan);
+			Serial.print(adc_value[chan]); Serial.print("\t");
+		}
+		Serial.println();
 	#endif
 
 	#ifdef USE_TFT
@@ -125,17 +144,17 @@ void loop() {
 
 	#ifdef USE_LED
 		leds.setPixelColor(0, leds.Color(
-			map(adc_value[0], 0, 4095, 0, 255),
-			map(adc_value[1], 0, 4095, 0, 255),
-			map(adc_value[2], 0, 4095, 0, 255)));
+			map(adc_value[0], 0, 1023, 0, 255),
+			map(adc_value[1], 0, 1023, 0, 255),
+			map(adc_value[2], 0, 1023, 0, 255)));
 			leds.show();
 	#endif
 
 	#ifdef USE_RADIO
 		if (radio.write(adc_value, PAYLOAD_SIZE))
-		Serial.print("s\n");
+			Serial.print("s\n");
 		else
-		Serial.print("f\n");
+			Serial.print("f\n");
 	#endif
 
 	delay(100);
