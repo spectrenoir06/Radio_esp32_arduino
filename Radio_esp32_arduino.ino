@@ -9,6 +9,8 @@
 #include <FS.h>
 #include <SD.h>
 
+#include "audio.hpp"
+
 #define NEOPIXEL_PIN 5
 
 #define TFT_DC 2
