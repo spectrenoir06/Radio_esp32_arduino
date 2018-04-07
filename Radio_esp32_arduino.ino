@@ -99,6 +99,7 @@ void setup() {
 
 	#ifdef USE_TFT
 		tft.begin();
+		tft.setRotation(1);
 		tft.fillScreen(ILI9341_BLACK);
 		ts.begin();
 	#endif
@@ -135,10 +136,10 @@ void setup() {
 
 void loop() {
 	#ifdef USE_TFT
-		tft.fillRect(0, 0, 320, 240, 0);
+		tft.fillScreen(ILI9341_BLACK);
 		tft.setCursor(0, 0);
 		tft.setTextColor(ILI9341_WHITE,0);
-		tft.setTextSize(3);
+		tft.setTextSize(2);
 	#endif
 
 	#ifdef USE_INT_ADC
@@ -157,17 +158,24 @@ void loop() {
 	#endif
 
 	#ifdef USE_TFT
-		tft.println(adc_value[0]);
-		tft.println(adc_value[1]);
-		tft.println(adc_value[2]);
-		tft.println(adc_value[3]);
+		tft.println("\nADC inputs:");
+		for (int chan=0;chan,chan<8;chan++) {
+			tft.print("  [");
+			tft.print(chan);
+			tft.print("] = ");
+			tft.println(adc_value[chan]);
+		}
 
+		tft.println("\nTouchScreen:");
 		if (ts.touched()) {
 			TS_Point p = ts.getPoint();
-			tft.print("x: "); tft.println(p.x);
-			tft.print("y: "); tft.println(p.y);
-			Serial.print("x = "); Serial.println(p.x);
-			Serial.print("y = "); Serial.println(p.y);
+			tft.print("  x: "); tft.println(p.x);
+			tft.print("  y: "); tft.println(p.y);
+			// Serial.print("x = "); Serial.println(p.x);
+			// Serial.print("y = "); Serial.println(p.y);
+		} else {
+			tft.println("  x:");
+			tft.println("  y:");
 		}
 	#endif
 
@@ -186,5 +194,5 @@ void loop() {
 			Serial.print("f\n");
 	#endif
 
-	delay(100);
+	delay(2000);
 }
