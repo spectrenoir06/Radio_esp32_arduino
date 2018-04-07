@@ -6,12 +6,15 @@
 #include <Adafruit_MCP3008.h>
 #include <RF24.h>
 #include <XPT2046_Touchscreen.h>
+#include <FS.h>
+#include <SD.h>
 
 #define NEOPIXEL_PIN 5
 
 #define TFT_DC 2
 #define TFT_CS 15
 #define TOUCH_CS 4
+#define SD_CS 16
 
 #define ADC_CS 21
 
@@ -28,6 +31,7 @@
 #define USE_LED
 //#define USE_INT_ADC
 #define USE_EXT_ADC
+#define USE_SD
 
 
 uint8_t addresses[5] = {0xe7,0xe7,0xe7,0xe7,0xe7};
@@ -102,6 +106,31 @@ void setup() {
 	#ifdef USE_EXT_ADC
 		adc.begin(ADC_CS);
 	#endif
+
+	#ifdef USE_SD
+		if(!SD.begin(SD_CS)){
+			Serial.println("Card Mount Failed");
+		} else {
+			uint8_t cardType = SD.cardType();
+
+			if(cardType == CARD_NONE){
+				Serial.println("No SD card attached");
+			} else {
+				Serial.print("SD Card Type: ");
+				if(cardType == CARD_MMC){
+					Serial.println("MMC");
+				} else if(cardType == CARD_SD){
+					Serial.println("SDSC");
+				} else if(cardType == CARD_SDHC){
+					Serial.println("SDHC");
+				} else {
+					Serial.println("UNKNOWN");
+				}
+				uint64_t cardSize = SD.cardSize() / (1024 * 1024);
+				Serial.printf("SD Card Size: %lluMB\n", cardSize);
+			}
+		}
+	#endif
 }
 
 void loop() {
@@ -122,9 +151,9 @@ void loop() {
 	#ifdef USE_EXT_ADC
 		for (int chan = 0; chan < 8; chan++) {
 			adc_value[chan] = adc.readADC(chan);
-			Serial.print(adc_value[chan]); Serial.print("\t");
+			//Serial.print(adc_value[chan]); Serial.print("\t");
 		}
-		Serial.println();
+		//Serial.println();
 	#endif
 
 	#ifdef USE_TFT
