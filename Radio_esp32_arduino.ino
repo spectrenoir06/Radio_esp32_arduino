@@ -11,7 +11,7 @@
 
 // #include "audio.hpp"
 
-// #define OLD
+#define OLD
 
 #define NEOPIXEL_PIN 5
 
@@ -50,9 +50,9 @@
 
 #define USE_RADIO
 #define USE_TFT
-//#define USE_LED
-// #define USE_INT_ADC
-#define USE_EXT_ADC // if plug need to be on
+#define USE_LED
+#define USE_INT_ADC
+// #define USE_EXT_ADC // if plug need to be on
 #define USE_SD // if plug need to be on
 #define USE_TS // if plug need to be on
 
@@ -149,7 +149,7 @@ void setup() {
 	#endif
 
 	#ifdef USE_TFT
-		tft.setRotation(1);
+		tft.setRotation(3);
 		tft.fillScreen(ILI9341_BLACK);
 	#endif
 
@@ -162,10 +162,12 @@ void setup() {
 		pinMode(CC25_CS, OUTPUT);
 		pinMode(CYRF_CS, OUTPUT);
 		pinMode(A7105_CS, OUTPUT);
+		pinMode(CYRF_RST, OUTPUT);
 
 		digitalWrite(CC25_CS, HIGH);
 		digitalWrite(CYRF_CS, HIGH);
 		digitalWrite(A7105_CS, HIGH);
+		digitalWrite(CYRF_RST, HIGH);
 
 		delay(100);
 
@@ -349,12 +351,12 @@ void loop() {
 		}
 	#endif
 
-	// #ifdef USE_RADIO
-	// 	if (radio.write(adc_value, PAYLOAD_SIZE))
-	// 		Serial.print("Radio send success\n");
-	// 	else
-	// 		Serial.print("Radio send failed\n");
-	// #endif
+	#ifdef USE_RADIO
+		if (radio.write(adc_value, PAYLOAD_SIZE))
+			Serial.print("Radio send success\n");
+		else
+			Serial.print("Radio send failed\n");
+	#endif
 
-	delay(10);
+	delay(100);
 }
