@@ -48,7 +48,7 @@ uint16_t adc_value[8];
 #endif
 
 #ifdef USE_LED
-	Adafruit_NeoPixel leds = Adafruit_NeoPixel(1, NEOPIXEL_PIN, NEO_GRB + NEO_KHZ800);
+	Adafruit_NeoPixel leds = Adafruit_NeoPixel(4, NEOPIXEL_PIN, NEO_GRB + NEO_KHZ800);
 #endif
 
 #ifdef USE_EXT_ADC
@@ -65,8 +65,6 @@ void setup() {
 
 	#ifdef USE_LED
 		leds.begin();
-		leds.show();
-		leds.setPixelColor(0, leds.Color(50,25,0));
 		leds.show();
 	#endif
 
@@ -152,6 +150,10 @@ void loop() {
 		adc_value[1] = analogRead(39)>>2;
 		adc_value[2] = analogRead(34)>>2;
 		adc_value[3] = analogRead(35)>>2;
+		adc_value[4] = 0;
+		adc_value[5] = 0;
+		adc_value[6] = 0;
+		adc_value[7] = 0;
 	#endif
 
 	#ifdef USE_EXT_ADC
@@ -193,23 +195,23 @@ void loop() {
 		));
 		leds.setPixelColor(1, leds.Color(
 			0,
-			map(adc_value[0], 0, 1023, 0, 255),
+			map(adc_value[1], 0, 1023, 0, 255),
 			0
 		));
 		leds.setPixelColor(2, leds.Color(
 			0,
 			0,
-			map(adc_value[0], 0, 1023, 0, 255)
+			map(adc_value[2], 0, 1023, 0, 255)
 		));
 		leds.setPixelColor(3, leds.Color(
-			map(adc_value[0], 0, 1023, 0, 255),
-			map(adc_value[0], 0, 1023, 0, 255),
+			map(adc_value[3], 0, 1023, 0, 255),
+			map(adc_value[3], 0, 1023, 0, 255),
 			0
 		));
 		leds.show();
 	#endif
 
-	#if defined (USE_TFT) || defined (USE_RADIO)
+	#if defined (USE_TFT) && defined (USE_RADIO)
 		tft.println("\nRadio nRF24L01P");
 		if (radio_on) {
 			tft.print("  PA power: ");
