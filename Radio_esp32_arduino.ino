@@ -11,6 +11,8 @@
 
 // #include "audio.hpp"
 
+//#define OLD
+
 #define NEOPIXEL_PIN 5
 
 #define TFT_DC 2
@@ -21,7 +23,25 @@
 #define ADC_CS 21
 
 #define NRF24_CE 35 // not use
-#define NRF24_CS 33
+
+#ifdef OLD
+	#define NRF24_CS 26
+#else
+	#define NRF24_CS 33
+#endif
+
+#define CC25_CS 27
+
+#define A7105_CS 14
+
+#ifdef OLD
+	#define CYRF_CS 25
+#else
+	#define CYRF_CS 32
+#endif
+
+#define CYRF_RST 17
+
 #define PAYLOAD_SIZE 16
 
 #define RADIO_PE1 13
@@ -38,7 +58,6 @@
 #define FONT_SIZE 1
 
 uint8_t addresses[5] = {0xe7,0xe7,0xe7,0xe7,0xe7};
-// uint8_t data[PAYLOAD_SIZE];
 
 uint16_t adc_value[8];
 
@@ -58,6 +77,12 @@ uint16_t adc_value[8];
 #ifdef USE_RADIO
 	RF24 radio(NRF24_CE, NRF24_CS);
 	uint8_t radio_on = 0;
+#endif
+
+#ifdef USE_SD
+	uint8_t cardType;
+	uint8_t cardState;
+	uint64_t cardSize;
 #endif
 
 void setup() {
@@ -80,11 +105,12 @@ void setup() {
 	#ifdef USE_SD
 		if(!SD.begin(SD_CS)){
 			Serial.println("Card Mount Failed");
+			cardState = 0;
 		} else {
-			uint8_t cardType = SD.cardType();
-
+			cardType = SD.cardType();
 			if(cardType == CARD_NONE){
 				Serial.println("No SD card attached");
+				cardState = 1;
 			} else {
 				Serial.print("SD Card Type: ");
 				if(cardType == CARD_MMC){
@@ -96,7 +122,8 @@ void setup() {
 				} else {
 					Serial.println("UNKNOWN");
 				}
-				uint64_t cardSize = SD.cardSize() / (1024 * 1024);
+				cardSize = SD.cardSize() / (1024 * 1024);
+				cardState = 2;
 				Serial.printf("SD Card Size: %lluMB\n", cardSize);
 			}
 		}
@@ -110,8 +137,16 @@ void setup() {
 	#ifdef USE_RADIO
 		pinMode(RADIO_PE1, OUTPUT);
 		pinMode(RADIO_PE2, OUTPUT);
-		digitalWrite(RADIO_PE1, HIGH); // nrf24 (pE1 high, PE2 low)
+		digitalWrite(RADIO_PE1, HIGH); // nrf24 (PE1 high, PE2 low)
 		digitalWrite(RADIO_PE2, LOW);
+
+		pinMode(CC25_CS, OUTPUT);
+		pinMode(CYRF_CS, OUTPUT);
+		pinMode(A7105_CS, OUTPUT);
+
+		digitalWrite(CC25_CS, HIGH);
+		digitalWrite(CYRF_CS, HIGH);
+		digitalWrite(A7105_CS, HIGH);
 
 		delay(100);
 
@@ -260,6 +295,31 @@ void loop() {
 			}
 		} else {
 			tft.println("  RADIO ERROR");
+		}
+	#endif
+
+	#if defined(USE_SD) && defined(USE_TFT)
+		tft.println("\nSD card:");
+		if (!cardState) {
+			tft.println("  Error loading SD");
+		} else {
+			if(cardType == CARD_NONE){
+				tft.println("  No card attached");
+			} else {
+				tft.print("  Type: ");
+				if(cardType == CARD_MMC){
+					tft.println("MMC");
+				} else if(cardType == CARD_SD){
+					tft.println("SDSC");
+				} else if(cardType == CARD_SDHC){
+					tft.println("SDHC");
+				} else {
+					tft.println("UNKNOWN");
+				}
+				tft.print("  Size:");
+				tft.print((uint32_t)cardSize);
+				tft.println("MB");
+			}
 		}
 	#endif
 
