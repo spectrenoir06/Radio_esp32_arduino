@@ -35,6 +35,7 @@
 #define USE_EXT_ADC
 #define USE_SD
 
+#define FONT_SIZE 1
 
 uint8_t addresses[5] = {0xe7,0xe7,0xe7,0xe7,0xe7};
 // uint8_t data[PAYLOAD_SIZE];
@@ -56,6 +57,7 @@ uint16_t adc_value[8];
 
 #ifdef USE_RADIO
 	RF24 radio(NRF24_CE, NRF24_CS);
+	uint8_t radio_on = 0;
 #endif
 
 void setup() {
@@ -115,27 +117,25 @@ void setup() {
 
 		delay(100);
 
-		if (radio.begin())
-			Serial.println("OK!");
-		else {
+		if (radio.begin()) {
+			Serial.println("Radio init OK!");
+
+			radio.setPALevel(RF24_PA_LOW);
+			radio.setChannel(0);
+			radio.setAddressWidth(5);
+			radio.setDataRate(RF24_1MBPS);
+			radio.setCRCLength(RF24_CRC_16);
+			//radio.setAutoAck(false);
+			radio.setRetries(15, 7);
+			radio.setPayloadSize(PAYLOAD_SIZE);
+			radio.openWritingPipe(addresses);
+
+			radio.powerUp();
+			radio.printDetails();
+			radio_on = 1;
+		} else {
 			Serial.println("Radio error init");
-			while (1);
 		}
-
-		Serial.println("\n");
-
-		radio.setPALevel(RF24_PA_LOW);
-		radio.setChannel(0);
-		radio.setAddressWidth(5);
-		radio.setDataRate(RF24_1MBPS);
-		radio.setCRCLength(RF24_CRC_16);
-		//radio.setAutoAck(false);
-		radio.setRetries(15, 7);
-		radio.setPayloadSize(PAYLOAD_SIZE);
-		radio.openWritingPipe(addresses);
-
-		radio.powerUp();
-		radio.printDetails();
 	#endif
 }
 
@@ -144,7 +144,7 @@ void loop() {
 		// tft.fillScreen(ILI9341_BLACK);
 		tft.setCursor(0, 0);
 		tft.setTextColor(ILI9341_WHITE,0);
-		tft.setTextSize(2);
+		tft.setTextSize(FONT_SIZE);
 	#endif
 
 	#ifdef USE_INT_ADC
@@ -207,6 +207,58 @@ void loop() {
 			0
 		));
 		leds.show();
+	#endif
+
+	#if defined (USE_TFT) || defined (USE_RADIO)
+		tft.println("\nRadio nRF24L01P");
+		if (radio_on) {
+			tft.print("  PA power: ");
+			switch (radio.getPALevel()) {
+				case RF24_PA_MIN:
+				tft.println("MIN");
+				break;
+				case RF24_PA_LOW:
+				tft.println("LOW");
+				break;
+				case RF24_PA_HIGH:
+				tft.println("HIGH");
+				break;
+				case RF24_PA_MAX:
+				tft.println("MAX");
+				break;
+			}
+
+			tft.print("  Data rate: ");
+			switch (radio.getDataRate()) {
+				case RF24_250KBPS:
+				tft.println("250KBPS");
+				break;
+				case RF24_2MBPS:
+				tft.println("2MBPS");
+				break;
+				case RF24_1MBPS:
+				tft.println("1MBPS");
+				break;
+			}
+
+			tft.print("  Channel: ");
+			tft.println(radio.getChannel());
+
+			tft.print("  CRC Length: ");
+			switch (radio.getCRCLength()) {
+				case RF24_CRC_DISABLED:
+				tft.println("Disable");
+				break;
+				case RF24_CRC_16:
+				tft.println("16 bits");
+				break;
+				case RF24_CRC_8:
+				tft.println("8 bits");
+				break;
+			}
+		} else {
+			tft.println("  RADIO ERROR");
+		}
 	#endif
 
 	// #ifdef USE_RADIO
