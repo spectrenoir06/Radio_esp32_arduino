@@ -56,6 +56,11 @@
 #define USE_SD // if plug need to be on
 #define USE_TS // if plug need to be on
 
+#define PRINT_ADC
+#define PRINT_TS
+#define PRINT_RADIO
+#define PRINT_SD
+
 #define FONT_SIZE 1
 
 uint8_t addresses[5] = {0xe7,0xe7,0xe7,0xe7,0xe7};
@@ -151,6 +156,8 @@ void setup() {
 	#ifdef USE_TFT
 		tft.setRotation(3);
 		tft.fillScreen(ILI9341_BLACK);
+		tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
+		tft.setTextSize(FONT_SIZE);
 	#endif
 
 	#ifdef USE_RADIO
@@ -194,13 +201,6 @@ void setup() {
 }
 
 void loop() {
-	#ifdef USE_TFT
-		// tft.fillScreen(ILI9341_BLACK);
-		tft.setCursor(0, 0);
-		tft.setTextColor(ILI9341_WHITE,0);
-		tft.setTextSize(FONT_SIZE);
-	#endif
-
 	#ifdef USE_INT_ADC
 		adc_value[0] = analogRead(36)>>2;
 		adc_value[1] = analogRead(39)>>2;
@@ -218,36 +218,6 @@ void loop() {
 			//Serial.print(adc_value[chan]); Serial.print("\t");
 		}
 		//Serial.println();
-	#endif
-
-	#ifdef USE_TFT
-		tft.print("\nADC inputs: ");
-		#ifdef USE_EXT_ADC
-			tft.println("(EXT)");
-		#else
-			tft.println("(INT)");
-		#endif
-		for (int chan=0;chan,chan<8;chan++) {
-			tft.print("  [");
-			tft.print(chan);
-			tft.print("] = ");
-			tft.print(adc_value[chan]);
-			tft.println("   ");
-		}
-
-		#ifdef USE_TS
-			tft.println("\nTouchScreen:");
-			if (ts.touched()) {
-				TS_Point p = ts.getPoint();
-				tft.print("  x: "); tft.print(p.x); tft.println("   ");
-				tft.print("  y: "); tft.print(p.y); tft.println("   ");
-				// Serial.print("x = "); Serial.println(p.x);
-				// Serial.print("y = "); Serial.println(p.y);
-			} else {
-				tft.println("  x:       ");
-				tft.println("  y:       ");
-			}
-		#endif
 	#endif
 
 	#ifdef USE_LED
@@ -274,7 +244,39 @@ void loop() {
 		leds.show();
 	#endif
 
-	#if defined (USE_TFT) && defined (USE_RADIO)
+	#if defined(USE_TFT) && defined(PRINT_ADC)
+		// tft.fillScreen(ILI9341_BLACK);
+		tft.setCursor(0, 0);
+		tft.print("\nADC inputs: ");
+		#ifdef USE_EXT_ADC
+			tft.println("(EXT)");
+		#else
+			tft.println("(INT)");
+		#endif
+		for (int chan=0;chan,chan<8;chan++) {
+			tft.print("  [");
+			tft.print(chan);
+			tft.print("] = ");
+			tft.print(adc_value[chan]);
+			tft.println("   ");
+		}
+	#endif
+
+	#if defined(USE_TFT) && defined(USE_TS) && defined(PRINT_TS)
+		tft.println("\nTouchScreen:");
+		if (ts.touched()) {
+			TS_Point p = ts.getPoint();
+			tft.print("  x: "); tft.print(p.x); tft.println("   ");
+			tft.print("  y: "); tft.print(p.y); tft.println("   ");
+			// Serial.print("x = "); Serial.println(p.x);
+			// Serial.print("y = "); Serial.println(p.y);
+		} else {
+			tft.println("  x:       ");
+			tft.println("  y:       ");
+		}
+	#endif
+
+	#if defined(USE_TFT) && defined(USE_RADIO) && defined(PRINT_RADIO)
 		tft.println("\nRadio nRF24L01P");
 		if (radio_on) {
 			tft.print("  PA power: ");
@@ -326,7 +328,7 @@ void loop() {
 		}
 	#endif
 
-	#if defined(USE_SD) && defined(USE_TFT)
+	#if defined(USE_SD) && defined(USE_TFT) && defined(PRINT_SD)
 		tft.println("\nSD card:");
 		if (!cardState) {
 			tft.println("  Error loading SD");
@@ -358,5 +360,5 @@ void loop() {
 			Serial.print("Radio send failed\n");
 	#endif
 
-	delay(100);
+	delay(10);
 }
