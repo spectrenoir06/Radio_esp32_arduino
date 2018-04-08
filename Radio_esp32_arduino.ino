@@ -201,15 +201,16 @@ void setup() {
 }
 
 void loop() {
-	#ifdef USE_INT_ADC
+
+	#if  defined(USE_INT_ADC)
 		adc_value[0] = analogRead(36)>>2;
 		adc_value[1] = analogRead(39)>>2;
 		adc_value[2] = analogRead(34)>>2;
 		adc_value[3] = analogRead(35)>>2;
-		adc_value[4] = 0;
-		adc_value[5] = 0;
-		adc_value[6] = 0;
-		adc_value[7] = 0;
+		adc_value[4] = 127;
+		adc_value[5] = 255;
+		adc_value[6] = 511;
+		adc_value[7] = 1023;
 	#endif
 
 	#ifdef USE_EXT_ADC
@@ -328,7 +329,7 @@ void loop() {
 		}
 	#endif
 
-	#if defined(USE_SD) && defined(USE_TFT) && defined(PRINT_SD)
+	#if defined(USE_TFT) && defined(USE_SD) && defined(PRINT_SD)
 		tft.println("\nSD card:");
 		if (!cardState) {
 			tft.println("  Error loading SD");
