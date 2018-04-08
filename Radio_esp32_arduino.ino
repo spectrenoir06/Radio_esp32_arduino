@@ -11,7 +11,7 @@
 
 // #include "audio.hpp"
 
-//#define OLD
+// #define OLD
 
 #define NEOPIXEL_PIN 5
 
@@ -50,10 +50,11 @@
 
 #define USE_RADIO
 #define USE_TFT
-#define USE_LED
+//#define USE_LED
 // #define USE_INT_ADC
-#define USE_EXT_ADC
-#define USE_SD
+#define USE_EXT_ADC // if plug need to be on
+#define USE_SD // if plug need to be on
+#define USE_TS // if plug need to be on
 
 #define FONT_SIZE 1
 
@@ -63,6 +64,9 @@ uint16_t adc_value[8];
 
 #ifdef USE_TFT
 	Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
+#endif
+
+#ifdef USE_TS
 	XPT2046_Touchscreen ts(TOUCH_CS);
 #endif
 
@@ -95,11 +99,23 @@ void setup() {
 
 	#ifdef USE_TFT
 		tft.begin(48000000); // spi speed 48Mhz
+	#else
+		pinMode(TFT_CS, OUTPUT);
+		digitalWrite(TFT_CS, HIGH);
+	#endif
+
+	#ifdef USE_TS
 		ts.begin();
+	#else
+		pinMode(TOUCH_CS, OUTPUT);
+		digitalWrite(TOUCH_CS, HIGH);
 	#endif
 
 	#ifdef USE_EXT_ADC
 		adc.begin(ADC_CS);
+	#else
+		pinMode(ADC_CS, OUTPUT);
+		digitalWrite(ADC_CS, HIGH);
 	#endif
 
 	#ifdef USE_SD
@@ -127,6 +143,9 @@ void setup() {
 				Serial.printf("SD Card Size: %lluMB\n", cardSize);
 			}
 		}
+	#else
+		pinMode(SD_CS, OUTPUT);
+		digitalWrite(SD_CS, HIGH);
 	#endif
 
 	#ifdef USE_TFT
@@ -200,7 +219,12 @@ void loop() {
 	#endif
 
 	#ifdef USE_TFT
-		tft.println("\nADC inputs:");
+		tft.print("\nADC inputs: ");
+		#ifdef USE_EXT_ADC
+			tft.println("(EXT)");
+		#else
+			tft.println("(INT)");
+		#endif
 		for (int chan=0;chan,chan<8;chan++) {
 			tft.print("  [");
 			tft.print(chan);
@@ -209,17 +233,19 @@ void loop() {
 			tft.println("   ");
 		}
 
-		tft.println("\nTouchScreen:");
-		if (ts.touched()) {
-			TS_Point p = ts.getPoint();
-			tft.print("  x: "); tft.println(p.x);
-			tft.print("  y: "); tft.println(p.y);
-			// Serial.print("x = "); Serial.println(p.x);
-			// Serial.print("y = "); Serial.println(p.y);
-		} else {
-			tft.println("  x:       ");
-			tft.println("  y:       ");
-		}
+		#ifdef USE_TS
+			tft.println("\nTouchScreen:");
+			if (ts.touched()) {
+				TS_Point p = ts.getPoint();
+				tft.print("  x: "); tft.print(p.x); tft.println("   ");
+				tft.print("  y: "); tft.print(p.y); tft.println("   ");
+				// Serial.print("x = "); Serial.println(p.x);
+				// Serial.print("y = "); Serial.println(p.y);
+			} else {
+				tft.println("  x:       ");
+				tft.println("  y:       ");
+			}
+		#endif
 	#endif
 
 	#ifdef USE_LED
