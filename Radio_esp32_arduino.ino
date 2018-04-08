@@ -20,8 +20,8 @@
 
 #define ADC_CS 21
 
-#define NRF24_CE 5
-#define NRF24_CS 5
+#define NRF24_CE 35 // not use
+#define NRF24_CS 33
 #define PAYLOAD_SIZE 16
 
 #define RADIO_PE1 13
@@ -29,11 +29,11 @@
 
 
 #define USE_RADIO
-// #define USE_TFT
-// #define USE_LED
-//#define USE_INT_ADC
-// #define USE_EXT_ADC
-// #define USE_SD
+#define USE_TFT
+#define USE_LED
+// #define USE_INT_ADC
+#define USE_EXT_ADC
+#define USE_SD
 
 
 uint8_t addresses[5] = {0xe7,0xe7,0xe7,0xe7,0xe7};
@@ -61,7 +61,7 @@ uint16_t adc_value[8];
 void setup() {
 	Serial.begin(115200);
 
-	SPI.setFrequency(200000);
+	// SPI.setFrequency(200000);
 	// SPI.setBitOrder(MSBFIRST);
 	// SPI.setDataMode(0);
 
@@ -117,7 +117,7 @@ void setup() {
 		digitalWrite(RADIO_PE1, HIGH); // nrf24 (pE1 high, PE2 low)
 		digitalWrite(RADIO_PE2, LOW);
 
-		//delay(100);
+		delay(100);
 
 		// SPI.setFrequency(20000000);
 		// SPI.setBitOrder(MSBFIRST);
@@ -127,8 +127,9 @@ void setup() {
 			Serial.println("OK!");
 		else {
 			Serial.println("Radio error init");
-			//while (1);
+			while (1);
 		}
+
 		Serial.println("\n");
 
 		radio.setPALevel(RF24_PA_LOW);
