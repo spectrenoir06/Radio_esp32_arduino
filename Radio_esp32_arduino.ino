@@ -61,10 +61,6 @@ uint16_t adc_value[8];
 void setup() {
 	Serial.begin(115200);
 
-	// SPI.setFrequency(200000);
-	// SPI.setBitOrder(MSBFIRST);
-	// SPI.setDataMode(0);
-
 	#ifdef USE_LED
 		leds.begin();
 		leds.show();
@@ -73,7 +69,7 @@ void setup() {
 	#endif
 
 	#ifdef USE_TFT
-		tft.begin();
+		tft.begin(48000000); // spi speed 48Mhz
 		ts.begin();
 	#endif
 
@@ -119,10 +115,6 @@ void setup() {
 
 		delay(100);
 
-		// SPI.setFrequency(20000000);
-		// SPI.setBitOrder(MSBFIRST);
-		// SPI.setDataMode(0);
-
 		if (radio.begin())
 			Serial.println("OK!");
 		else {
@@ -149,7 +141,7 @@ void setup() {
 
 void loop() {
 	#ifdef USE_TFT
-		//tft.fillScreen(ILI9341_BLUE);
+		// tft.fillScreen(ILI9341_BLACK);
 		tft.setCursor(0, 0);
 		tft.setTextColor(ILI9341_WHITE,0);
 		tft.setTextSize(2);
