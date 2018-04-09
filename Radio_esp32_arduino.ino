@@ -103,7 +103,7 @@ void setup() {
 	#endif
 
 	#ifdef USE_TFT
-		tft.begin(48000000); // spi speed 48Mhz
+		tft.begin(40000000); // spi speed 40Mhz
 	#else
 		pinMode(TFT_CS, OUTPUT);
 		digitalWrite(TFT_CS, HIGH);
