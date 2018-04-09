@@ -174,7 +174,6 @@ void setup() {
 
 	#ifdef USE_RADIO
 		delay(100);
-
 		if (radio.begin()) {
 			Serial.println("Radio init OK!");
 
@@ -352,10 +351,10 @@ void loop() {
 	#endif
 
 	#ifdef USE_RADIO
-		if (radio.write(adc_value, PAYLOAD_SIZE))
-			Serial.print("Radio send success\n");
-		else
-			Serial.print("Radio send failed\n");
+		// if (radio.write(adc_value, PAYLOAD_SIZE))
+		// 	Serial.print("Radio send success\n");
+		// else
+		// 	Serial.print("Radio send failed\n");
 	#endif
 
 	delay(10);
