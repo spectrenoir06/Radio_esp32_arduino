@@ -97,6 +97,30 @@ uint16_t adc_value[8];
 void setup() {
 	Serial.begin(115200);
 
+	pinMode(TFT_CS, OUTPUT);
+	pinMode(TOUCH_CS, OUTPUT);
+	pinMode(ADC_CS, OUTPUT);
+	pinMode(SD_CS, OUTPUT);
+	pinMode(CC25_CS, OUTPUT);
+	pinMode(CYRF_CS, OUTPUT);
+	pinMode(A7105_CS, OUTPUT);
+	pinMode(CYRF_RST, OUTPUT);
+
+	pinMode(RADIO_PE1, OUTPUT);
+	pinMode(RADIO_PE2, OUTPUT);
+
+	digitalWrite(TFT_CS, HIGH);
+	digitalWrite(TOUCH_CS, HIGH);
+	digitalWrite(ADC_CS, HIGH);
+	digitalWrite(SD_CS, HIGH);
+	digitalWrite(CC25_CS, HIGH);
+	digitalWrite(CYRF_CS, HIGH);
+	digitalWrite(A7105_CS, HIGH);
+	digitalWrite(CYRF_RST, HIGH);
+
+	digitalWrite(RADIO_PE1, HIGH); // nrf24 (PE1 high, PE2 low)
+	digitalWrite(RADIO_PE2, LOW);
+
 	#ifdef USE_LED
 		leds.begin();
 		leds.show();
@@ -104,23 +128,14 @@ void setup() {
 
 	#ifdef USE_TFT
 		tft.begin(40000000); // spi speed 40Mhz
-	#else
-		pinMode(TFT_CS, OUTPUT);
-		digitalWrite(TFT_CS, HIGH);
 	#endif
 
 	#ifdef USE_TS
 		ts.begin();
-	#else
-		pinMode(TOUCH_CS, OUTPUT);
-		digitalWrite(TOUCH_CS, HIGH);
 	#endif
 
 	#ifdef USE_EXT_ADC
 		adc.begin(ADC_CS);
-	#else
-		pinMode(ADC_CS, OUTPUT);
-		digitalWrite(ADC_CS, HIGH);
 	#endif
 
 	#ifdef USE_SD
@@ -148,9 +163,6 @@ void setup() {
 				Serial.printf("SD Card Size: %lluMB\n", cardSize);
 			}
 		}
-	#else
-		pinMode(SD_CS, OUTPUT);
-		digitalWrite(SD_CS, HIGH);
 	#endif
 
 	#ifdef USE_TFT
@@ -161,21 +173,6 @@ void setup() {
 	#endif
 
 	#ifdef USE_RADIO
-		pinMode(RADIO_PE1, OUTPUT);
-		pinMode(RADIO_PE2, OUTPUT);
-		digitalWrite(RADIO_PE1, HIGH); // nrf24 (PE1 high, PE2 low)
-		digitalWrite(RADIO_PE2, LOW);
-
-		pinMode(CC25_CS, OUTPUT);
-		pinMode(CYRF_CS, OUTPUT);
-		pinMode(A7105_CS, OUTPUT);
-		pinMode(CYRF_RST, OUTPUT);
-
-		digitalWrite(CC25_CS, HIGH);
-		digitalWrite(CYRF_CS, HIGH);
-		digitalWrite(A7105_CS, HIGH);
-		digitalWrite(CYRF_RST, HIGH);
-
 		delay(100);
 
 		if (radio.begin()) {
