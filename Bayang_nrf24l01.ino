@@ -18,6 +18,7 @@ Multiprotocol is distributed in the hope that it will be useful,
 #if defined(BAYANG_NRF24L01_INO)
 
 #include "iface_nrf24l01.h"
+#include "TX_Def.h"
 
 #define BAYANG_BIND_COUNT		1000
 #define BAYANG_PACKET_PERIOD	1000
@@ -31,10 +32,10 @@ Multiprotocol is distributed in the hope that it will be useful,
 enum BAYANG_FLAGS {
 	// flags going to packet[2]
 	BAYANG_FLAG_RTH			= 0x01,
-	BAYANG_FLAG_HEADLESS	= 0x02, 
+	BAYANG_FLAG_HEADLESS	= 0x02,
 	BAYANG_FLAG_FLIP		= 0x08,
-	BAYANG_FLAG_VIDEO		= 0x10, 
-	BAYANG_FLAG_PICTURE		= 0x20, 
+	BAYANG_FLAG_VIDEO		= 0x10,
+	BAYANG_FLAG_PICTURE		= 0x20,
 	// flags going to packet[3]
 	BAYANG_FLAG_INVERTED	= 0x80, // inverted flight on Floureon H101
 	BAYANG_FLAG_TAKE_OFF	= 0x20, // take off / landing on X16 AH
@@ -114,19 +115,19 @@ static void __attribute__((unused)) BAYANG_send_packet(uint8_t bind)
 		if(CH13_SW)
 			packet[3] |= BAYANG_FLAG_EMG_STOP;
 		//Aileron
-		val = convert_channel_10b(AILERON);
+		val = Channel_data[AILERON];
 		packet[4] = (val>>8) + (dyntrim ? ((val>>2) & 0xFC) : 0x7C);
 		packet[5] = val & 0xFF;
 		//Elevator
-		val = convert_channel_10b(ELEVATOR);
+		val = Channel_data[ELEVATOR];
 		packet[6] = (val>>8) + (dyntrim ? ((val>>2) & 0xFC) : 0x7C);
 		packet[7] = val & 0xFF;
 		//Throttle
-		val = convert_channel_10b(THROTTLE);
+		val = Channel_data[THROTTLE];
 		packet[8] = (val>>8) + 0x7C;
 		packet[9] = val & 0xFF;
 		//Rudder
-		val = convert_channel_10b(RUDDER);
+		val = Channel_data[RUDDER];
 		packet[10] = (val>>8) + (dyntrim ? ((val>>2) & 0xFC) : 0x7C);
 		packet[11] = val & 0xFF;
 	}
@@ -232,7 +233,7 @@ static void __attribute__((unused)) BAYANG_init()
 	NRF24L01_WriteReg(NRF24L01_1C_DYNPD, 0x00);			// Disable dynamic payload length on all pipes
 	NRF24L01_WriteReg(NRF24L01_1D_FEATURE, 0x01);
 	NRF24L01_Activate(0x73);
-	
+
 	switch (sub_protocol)
 	{
 		case X16_AH:
@@ -254,7 +255,7 @@ uint16_t BAYANG_callback()
 		packet_count++;
 		#ifdef BAYANG_HUB_TELEMETRY
 			if (option)
-			{	// telemetry is enabled 
+			{	// telemetry is enabled
 				state++;
 				if (state > 1000)
 				{
