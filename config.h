@@ -1,7 +1,7 @@
 #define OLD
 
 // #define USE_RADIO
-#define USE_TFT
+// #define USE_TFT
 // #define USE_LED
 // #define USE_SD
 #define USE_TS

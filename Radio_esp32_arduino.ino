@@ -207,6 +207,10 @@ void setup() {
 			Serial.println("Radio error init");
 		}
 	#endif
+
+	initBAYANG();
+
+	Serial.println("Init");
 }
 
 void loop() {
@@ -370,5 +374,7 @@ void loop() {
 			Serial.print("Radio send failed\n");
 	#endif
 
-	delay(20);
+	BAYANG_callback();
+
+	delay(10);
 }
