@@ -1,5 +1,4 @@
-
-#define OLD
+#include "config.h"
 
 #define NEOPIXEL_pin  5
 
