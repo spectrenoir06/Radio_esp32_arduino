@@ -10,6 +10,7 @@
 #include <SD.h>
 #include "pins.h"
 #include "Multiprotocol.h"
+#include "iface_nrf24l01.h"
 
 // #include "audio.hpp"
 
@@ -25,7 +26,7 @@
 
 #define NRF24L01_INSTALLED
 
-#include "iface_nrf24l01.h"
+// #define	BAYANG_NRF24L01_INO
 
 #define PRINT_ADC
 #define PRINT_TS
@@ -170,17 +171,17 @@ void setup() {
 
 		NRF24L01_Initialize();
 		NRF24L01_SetTxRxMode(TX_EN);
-
-		//XN297_SetTXAddr((uint8_t *)"\x00\x00\x00\x00\x00", BAYANG_ADDRESS_LENGTH);
-
+        //
+		// //XN297_SetTXAddr((uint8_t *)"\x00\x00\x00\x00\x00", BAYANG_ADDRESS_LENGTH);
+        //
 		NRF24L01_FlushTx();
 		NRF24L01_FlushRx();
 		NRF24L01_WriteReg(NRF24L01_07_STATUS, 0x70);     	// Clear data ready, data sent, and retransmit
-		NRF24L01_WriteReg(NRF24L01_01_EN_AA, 0x00);      	// No Auto Acknowldgement on all data pipes
-		NRF24L01_WriteReg(NRF24L01_02_EN_RXADDR, 0x01);  	// Enable data pipe 0 only
+		NRF24L01_WriteReg(NRF24L01_01_EN_AA, 0x3f);      	// Auto Acknowldgement on all data pipes
+		NRF24L01_WriteReg(NRF24L01_02_EN_RXADDR, 0x03);  	// Enable data pipe 0 and 1
 		NRF24L01_WriteReg(NRF24L01_11_RX_PW_P0, BAYANG_PACKET_SIZE);
 		NRF24L01_SetBitrate(NRF24L01_BR_1M);             	// 1Mbps
-		NRF24L01_WriteReg(NRF24L01_04_SETUP_RETR, 0x00);	// No retransmits
+		NRF24L01_WriteReg(NRF24L01_04_SETUP_RETR, 0x03);
 		NRF24L01_SetPower();
 		NRF24L01_Activate(0x73);							// Activate feature register
 		NRF24L01_WriteReg(NRF24L01_1C_DYNPD, 0x00);			// Disable dynamic payload length on all pipes
@@ -189,57 +190,57 @@ void setup() {
 
 		delay(100);
 
-		if (radio.begin()) {
-			Serial.println("Radio init OK!");
+		// if (radio.begin()) {
+			//Serial.println("Radio init OK!");
 
-			radio.setPALevel(RF24_PA_LOW);
-			radio.setChannel(0);
-			radio.setAddressWidth(5);
-			radio.setDataRate(RF24_1MBPS);
-			radio.setCRCLength(RF24_CRC_16);
-			//radio.setAutoAck(false);
-			radio.setRetries(15, 7);
-			radio.setPayloadSize(PAYLOAD_SIZE);
-			radio.openWritingPipe(addresses);
-
-			radio.powerUp();
+			// radio.setPALevel(RF24_PA_LOW);
+			// radio.setChannel(0);
+			// radio.setAddressWidth(5);
+			// radio.setDataRate(RF24_1MBPS);
+			// radio.setCRCLength(RF24_CRC_16);
+			// //radio.setAutoAck(false);
+			// radio.setRetries(15, 7);
+			// radio.setPayloadSize(PAYLOAD_SIZE);
+			// radio.openWritingPipe(addresses);
+            //
+			// radio.powerUp();
 		// NRF24L01_WriteReg(NRF24L01_05_RF_CH, 0);
 			radio.printDetails();
 
-			// while(42) {
-			// 	//Serial.println("hello");
-			// 	// Serial.print(NRF24L01_ReadReg(NRF24L01_10_TX_ADDR),HEX);
-            //
-			// 			// NRF24L01_WriteReg(NRF24L01_05_RF_CH, 0);
-            //
-			// 			// clear packet status bits and TX FIFO
-			// 			NRF24L01_WriteReg(NRF24L01_07_STATUS, 0x70);
-			// 			NRF24L01_FlushTx();
-            //
-			// 			// XN297_WritePayload(packet, BAYANG_PACKET_SIZE);
-            //
-			// 			uint16_t test[8];
-            //
-			// 			test[0] = 42;
-            //
-			// 			NRF24L01_WritePayload((uint8_t *)test, BAYANG_PACKET_SIZE);
-            //
-			// 			NRF24L01_SetTxRxMode(TXRX_OFF);
-			// 			NRF24L01_SetTxRxMode(TX_EN);
-            //
-			// 			// Power on, TX mode, 2byte CRC
-			// 			// Why CRC0? xn297 does not interpret it - either 16-bit CRC or nothing
-			// 			// XN297_Configure(_BV(NRF24L01_00_EN_CRC) | _BV(NRF24L01_00_CRCO) | _BV(NRF24L01_00_PWR_UP));
-			// 			NRF24L01_WriteReg(NRF24L01_00_CONFIG, (_BV(NRF24L01_00_EN_CRC) | _BV(NRF24L01_00_CRCO) | _BV(NRF24L01_00_PWR_UP)) & 0xFF);
-            //
-			// 			NRF24L01_SetPower();	// Set tx_power
-			// 			Serial.println("send");
-			// 	delay(1000);
-			// }
+			while(42) {
+				//Serial.println("hello");
+				// Serial.print(NRF24L01_ReadReg(NRF24L01_10_TX_ADDR),HEX);
+
+						NRF24L01_WriteReg(NRF24L01_05_RF_CH, 0);
+
+						// clear packet status bits and TX FIFO
+						NRF24L01_WriteReg(NRF24L01_07_STATUS, 0x70);
+						NRF24L01_FlushTx();
+
+						// XN297_WritePayload(packet, BAYANG_PACKET_SIZE);
+
+						uint16_t test[8];
+
+						test[0] = 42;
+
+						NRF24L01_WritePayload((uint8_t *)test, BAYANG_PACKET_SIZE);
+
+						NRF24L01_SetTxRxMode(TXRX_OFF);
+						NRF24L01_SetTxRxMode(TX_EN);
+
+						// Power on, TX mode, 2byte CRC
+						// Why CRC0? xn297 does not interpret it - either 16-bit CRC or nothing
+						// XN297_Configure(_BV(NRF24L01_00_EN_CRC) | _BV(NRF24L01_00_CRCO) | _BV(NRF24L01_00_PWR_UP));
+						NRF24L01_WriteReg(NRF24L01_00_CONFIG, (_BV(NRF24L01_00_EN_CRC) | _BV(NRF24L01_00_CRCO) | _BV(NRF24L01_00_PWR_UP)) & 0xFF);
+
+						NRF24L01_SetPower();	// Set tx_power
+						Serial.println("send");
+				delay(1000);
+			}
 			radio_on = 1;
-		} else {
-			Serial.println("Radio error init");
-		}
+		// } else {
+		// 	Serial.println("Radio error init");
+		// }
 	#endif
 }
 

@@ -1,5 +1,5 @@
 
-// #define OLD
+#define OLD
 
 #define NEOPIXEL_pin  5
 
