@@ -18,7 +18,6 @@ Multiprotocol is distributed in the hope that it will be useful,
 #if defined(BAYANG_NRF24L01_INO)
 
 #include "iface_nrf24l01.h"
-#include "TX_Def.h"
 
 #define BAYANG_BIND_COUNT		1000
 #define BAYANG_PACKET_PERIOD	1000

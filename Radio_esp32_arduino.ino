@@ -209,6 +209,7 @@ void setup() {
 	#endif
 
 	initBAYANG();
+	delay(5);
 
 	Serial.println("Init");
 }
@@ -216,14 +217,14 @@ void setup() {
 void loop() {
 
 	#if  defined(USE_INT_ADC)
-		adc_value[0] = analogRead(36)>>2;
-		adc_value[1] = analogRead(39)>>2;
-		adc_value[2] = analogRead(34)>>2;
-		adc_value[3] = analogRead(35)>>2;
-		adc_value[4] = 127;
-		adc_value[5] = 255;
-		adc_value[6] = 511;
-		adc_value[7] = 1023;
+		Channel_data[0] = map16b(analogRead(36), 0, 4095, CHANNEL_MIN_100, CHANNEL_MAX_100);
+		Channel_data[1] = map16b(analogRead(39), 0, 4095, CHANNEL_MIN_100, CHANNEL_MAX_100);
+		Channel_data[2] = map16b(analogRead(34), 0, 4095, CHANNEL_MIN_100, CHANNEL_MAX_100);
+		Channel_data[3] = map16b(analogRead(35), 0, 4095, CHANNEL_MIN_100, CHANNEL_MAX_100);
+		Channel_data[4] = 127;
+		Channel_data[5] = 255;
+		Channel_data[6] = 511;
+		Channel_data[7] = 1023;
 	#endif
 
 	#ifdef USE_EXT_ADC
@@ -375,6 +376,5 @@ void loop() {
 	#endif
 
 	BAYANG_callback();
-
-	delay(10);
+	delay(5);
 }
