@@ -111,8 +111,8 @@ uint8_t protocol_flags=0,protocol_flags2=0;
 #ifdef USE_WIFI
 	const char * networkName = WIFI_SSID;
 	const char * networkPswd = WIFI_PASSWORD;
-	const char * udpAddress = "192.168.11.10";
-	const int udpPort = 3333;
+	const char * udpAddress = "192.168.11.169";
+	const int udpPort = 1234;
 
 	boolean connected = false;
 	WiFiUDP udp;
@@ -250,50 +250,7 @@ void setup() {
 	// delay(5);
 }
 
-void loop() {
-
-	#if  defined(USE_INT_ADC)
-		Channel_data[0] = map16b(analogRead(36), 0, 4095, CHANNEL_MIN_100, CHANNEL_MAX_100);
-		Channel_data[1] = map16b(analogRead(39), 0, 4095, CHANNEL_MIN_100, CHANNEL_MAX_100);
-		Channel_data[2] = map16b(analogRead(34), 0, 4095, CHANNEL_MIN_100, CHANNEL_MAX_100);
-		Channel_data[3] = map16b(analogRead(35), 0, 4095, CHANNEL_MIN_100, CHANNEL_MAX_100);
-		Channel_data[4] = 127;
-		Channel_data[5] = 255;
-		Channel_data[6] = 511;
-		Channel_data[7] = 1023;
-	#endif
-
-	#ifdef USE_EXT_ADC
-		for (int chan = 0; chan < 8; chan++) {
-			adc_value[chan] = adc.readADC(chan);
-			// Serial.print(adc_value[chan]); Serial.print("\t");
-		}
-		// Serial.println();
-	#endif
-
-	#ifdef USE_LED
-		// leds.setPixelColor(0, leds.Color(
-		// 	map(adc_value[0], 0, 1023, 0, 255),
-		// 	0,
-		// 	0
-		// ));
-		// leds.setPixelColor(1, leds.Color(
-		// 	0,
-		// 	map(adc_value[1], 0, 1023, 0, 255),
-		// 	0
-		// ));
-		// leds.setPixelColor(2, leds.Color(
-		// 	0,
-		// 	0,
-		// 	map(adc_value[2], 0, 1023, 0, 255)
-		// ));
-		// leds.setPixelColor(3, leds.Color(
-		// 	map(adc_value[3], 0, 1023, 0, 255),
-		// 	map(adc_value[3], 0, 1023, 0, 255),
-		// 	0
-		// ));
-		// leds.show();
-	#endif
+void update_tft() {
 
 	#ifdef USE_TFT
 		// tft.fillScreen(ILI9341_BLACK);
@@ -410,12 +367,70 @@ void loop() {
 		}
 	#endif
 
+}
+
+void loop() {
+
+	#if  defined(USE_INT_ADC)
+		Channel_data[0] = map16b(analogRead(36), 0, 4095, CHANNEL_MIN_100, CHANNEL_MAX_100);
+		Channel_data[1] = map16b(analogRead(39), 0, 4095, CHANNEL_MIN_100, CHANNEL_MAX_100);
+		Channel_data[2] = map16b(analogRead(34), 0, 4095, CHANNEL_MIN_100, CHANNEL_MAX_100);
+		Channel_data[3] = map16b(analogRead(35), 0, 4095, CHANNEL_MIN_100, CHANNEL_MAX_100);
+		Channel_data[4] = 127;
+		Channel_data[5] = 255;
+		Channel_data[6] = 511;
+		Channel_data[7] = 1023;
+	#endif
+
+	#ifdef USE_EXT_ADC
+		for (int chan = 0; chan < 8; chan++) {
+			adc_value[chan] = adc.readADC(chan);
+			// Serial.print(adc_value[chan]); Serial.print("\t");
+		}
+		// Serial.println();
+	#endif
+
+	#ifdef USE_LED
+		// leds.setPixelColor(0, leds.Color(
+		// 	map(adc_value[0], 0, 1023, 0, 255),
+		// 	0,
+		// 	0
+		// ));
+		// leds.setPixelColor(1, leds.Color(
+		// 	0,
+		// 	map(adc_value[1], 0, 1023, 0, 255),
+		// 	0
+		// ));
+		// leds.setPixelColor(2, leds.Color(
+		// 	0,
+		// 	0,
+		// 	map(adc_value[2], 0, 1023, 0, 255)
+		// ));
+		// leds.setPixelColor(3, leds.Color(
+		// 	map(adc_value[3], 0, 1023, 0, 255),
+		// 	map(adc_value[3], 0, 1023, 0, 255),
+		// 	0
+		// ));
+		// leds.show();
+	#endif
+
 	#ifdef USE_RADIO
 		// if (radio.write(adc_value, PAYLOAD_SIZE))
 		// 	Serial.print("Radio send success\n");
 		// else
 		// 	Serial.print("Radio send failed\n");
 	#endif
+
+	#ifdef USE_WIFI
+		if(connected){
+			//Send a packet
+			udp.beginPacket(udpAddress, udpPort);
+				udp.write((uint8_t *)adc_value, PAYLOAD_SIZE);
+			udp.endPacket();
+		}
+	#endif
+
+	update_tft();
 
 	// while(1) {
 	// 	int x = 320-10;
@@ -430,7 +445,7 @@ void loop() {
 
 
 	// BAYANG_callback();
-	//delay(5);
+	delay(5);
 }
 
 #ifdef USE_WIFI

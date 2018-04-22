@@ -6,7 +6,7 @@
 #define USE_SD
 #define USE_TS
 #define USE_ADC
-#define USE_WIFI
+// #define USE_WIFI
 
 #ifdef USE_ADC
 	#ifdef OLD
