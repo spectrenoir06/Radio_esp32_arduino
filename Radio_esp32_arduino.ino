@@ -8,11 +8,15 @@
 #include <XPT2046_Touchscreen.h>
 #include <FS.h>
 #include <SD.h>
+#include <WiFi.h>
+#include <WiFiUdp.h>
+
 #include "pins.h"
 #include "Multiprotocol.h"
 #include "iface_nrf24l01.h"
 #include "config.h"
 #include "TX_Def.h"
+#include "wifi_config.h"
 
 // #include "audio.hpp"
 
@@ -104,6 +108,17 @@ uint8_t protocol_flags=0,protocol_flags2=0;
 	uint64_t cardSize;
 #endif
 
+#ifdef USE_WIFI
+	const char * networkName = WIFI_SSID;
+	const char * networkPswd = WIFI_PASSWORD;
+	const char * udpAddress = "192.168.11.10";
+	const int udpPort = 3333;
+
+	boolean connected = false;
+	WiFiUDP udp;
+#endif
+
+
 void setup() {
 	Serial.begin(115200);
 	SPI.begin();
@@ -138,6 +153,22 @@ void setup() {
 	#ifdef USE_LED
 		leds.begin();
 		leds.show();
+		delay(10);
+		leds.setPixelColor(0, leds.Color(255, 0, 0));
+		leds.show();
+		delay(500);
+		leds.setPixelColor(0, leds.Color(255, 255, 0));
+		leds.show();
+		delay(500);
+		leds.setPixelColor(0, leds.Color(0, 0, 255));
+		leds.show();
+		delay(500);
+		leds.setPixelColor(0, leds.Color(255, 255, 255));
+		leds.show();
+		delay(500);
+		leds.setPixelColor(0, leds.Color(0, 0, 0));
+		leds.show();
+		delay(500);
 	#endif
 
 	#ifdef USE_TFT
@@ -180,7 +211,7 @@ void setup() {
 	#endif
 
 	#ifdef USE_TFT
-		tft.setRotation(3);
+		tft.setRotation(1);
 		tft.fillScreen(ILI9341_BLACK);
 		tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
 		tft.setTextSize(FONT_SIZE);
@@ -208,10 +239,15 @@ void setup() {
 		}
 	#endif
 
-	initBAYANG();
-	delay(5);
+	#ifdef USE_WIFI
+		Serial.println("Connecting to WiFi network: " + String(networkName));
+		WiFi.disconnect(true);
+		WiFi.onEvent(WiFiEvent);
+		WiFi.begin(networkName, networkPswd);
+	#endif
 
-	Serial.println("Init");
+	// initBAYANG();
+	// delay(5);
 }
 
 void loop() {
@@ -230,38 +266,41 @@ void loop() {
 	#ifdef USE_EXT_ADC
 		for (int chan = 0; chan < 8; chan++) {
 			adc_value[chan] = adc.readADC(chan);
-			//Serial.print(adc_value[chan]); Serial.print("\t");
+			// Serial.print(adc_value[chan]); Serial.print("\t");
 		}
-		//Serial.println();
+		// Serial.println();
 	#endif
 
 	#ifdef USE_LED
-		leds.setPixelColor(0, leds.Color(
-			map(adc_value[0], 0, 1023, 0, 255),
-			0,
-			0
-		));
-		leds.setPixelColor(1, leds.Color(
-			0,
-			map(adc_value[1], 0, 1023, 0, 255),
-			0
-		));
-		leds.setPixelColor(2, leds.Color(
-			0,
-			0,
-			map(adc_value[2], 0, 1023, 0, 255)
-		));
-		leds.setPixelColor(3, leds.Color(
-			map(adc_value[3], 0, 1023, 0, 255),
-			map(adc_value[3], 0, 1023, 0, 255),
-			0
-		));
-		leds.show();
+		// leds.setPixelColor(0, leds.Color(
+		// 	map(adc_value[0], 0, 1023, 0, 255),
+		// 	0,
+		// 	0
+		// ));
+		// leds.setPixelColor(1, leds.Color(
+		// 	0,
+		// 	map(adc_value[1], 0, 1023, 0, 255),
+		// 	0
+		// ));
+		// leds.setPixelColor(2, leds.Color(
+		// 	0,
+		// 	0,
+		// 	map(adc_value[2], 0, 1023, 0, 255)
+		// ));
+		// leds.setPixelColor(3, leds.Color(
+		// 	map(adc_value[3], 0, 1023, 0, 255),
+		// 	map(adc_value[3], 0, 1023, 0, 255),
+		// 	0
+		// ));
+		// leds.show();
+	#endif
+
+	#ifdef USE_TFT
+		// tft.fillScreen(ILI9341_BLACK);
+		tft.setCursor(0, 0);
 	#endif
 
 	#if defined(USE_TFT) && defined(PRINT_ADC)
-		// tft.fillScreen(ILI9341_BLACK);
-		tft.setCursor(0, 0);
 		tft.print("\nADC inputs: ");
 		#ifdef USE_EXT_ADC
 			tft.println("(EXT)");
@@ -283,11 +322,14 @@ void loop() {
 			TS_Point p = ts.getPoint();
 			tft.print("  x: "); tft.print(p.x); tft.println("   ");
 			tft.print("  y: "); tft.print(p.y); tft.println("   ");
+			tft.print("  z: "); tft.print(p.z); tft.println("   ");
+			// tft.drawCircle((int16_t)((p.x - 300) * .09), (int16_t)(p.y * .11376), 2, ILI9341_RED);
 			// Serial.print("x = "); Serial.println(p.x);
 			// Serial.print("y = "); Serial.println(p.y);
 		} else {
 			tft.println("  x:       ");
 			tft.println("  y:       ");
+			tft.println("  z:       ");
 		}
 	#endif
 
@@ -369,12 +411,45 @@ void loop() {
 	#endif
 
 	#ifdef USE_RADIO
-		if (radio.write(adc_value, PAYLOAD_SIZE))
-			Serial.print("Radio send success\n");
-		else
-			Serial.print("Radio send failed\n");
+		// if (radio.write(adc_value, PAYLOAD_SIZE))
+		// 	Serial.print("Radio send success\n");
+		// else
+		// 	Serial.print("Radio send failed\n");
 	#endif
 
-	BAYANG_callback();
-	delay(5);
+	// while(1) {
+	// 	int x = 320-10;
+	// 	int y = 240-10;
+	// 	tft.drawCircle(x, y, 2, ILI9341_RED);
+	// 	while (!ts.touched());
+	// 	TS_Point p = ts.getPoint();
+	// 	Serial.print("  x: "); Serial.print(p.x); Serial.println("   ");
+	// 	Serial.print("  y: "); Serial.print(p.y); Serial.println("   ");
+	// 	delay(1000);
+	// }
+
+
+	// BAYANG_callback();
+	//delay(5);
 }
+
+#ifdef USE_WIFI
+	//wifi event handler
+	void WiFiEvent(WiFiEvent_t event){
+		switch(event) {
+			case SYSTEM_EVENT_STA_GOT_IP:
+			//When connected set
+			Serial.print("WiFi connected! IP address: ");
+			Serial.println(WiFi.localIP());
+			//initializes the UDP state
+			//This initializes the transfer buffer
+			udp.begin(WiFi.localIP(),udpPort);
+			connected = true;
+			break;
+			case SYSTEM_EVENT_STA_DISCONNECTED:
+			Serial.println("WiFi lost connection");
+			connected = false;
+			break;
+		}
+	}
+	#endif
