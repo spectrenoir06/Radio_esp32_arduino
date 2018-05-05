@@ -248,6 +248,55 @@ void setup() {
 
 	// initBAYANG();
 	// delay(5);
+
+	tft.fillScreen(ILI9341_CYAN);
+
+	draw_titlebar(0, 0, "Main Menu");
+	draw_apps(0, 20);
+
+	// tft.fillRect(8, 20 + 9, 96, 96, ILI9341_BLACK);
+	// tft.fillRect(8, 20 + 9 + 96 + 10, 96, 96, ILI9341_BLACK);
+    //
+    //
+	// tft.fillRect(8 + 96 + 8, 20 + 9, 96, 96, ILI9341_BLACK);
+	// tft.fillRect(8 + 96 + 8, 20 + 9 + 96 + 10, 96, 96, ILI9341_BLACK);
+    //
+	// tft.fillRect(8 + 96 + 8 + 96 + 8, 20 + 9, 96, 96, ILI9341_BLACK);
+	// tft.fillRect(8 + 96 + 8 + 96 + 8, 20 + 9 + 96 + 10, 96, 96, ILI9341_BLACK);
+    //
+    //
+	// // tft.drawRect(100, 100, 96, 96, ILI9341_WHITE);
+
+}
+
+void draw_titlebar(uint16_t x, uint16_t y, char *title) {
+	tft.fillRect(x, y, 320, 20, ILI9341_BLACK);
+	tft.drawRect(x, y, 320, 20, ILI9341_WHITE);
+	tft.setCursor(x + 10, y + 6);
+	tft.printf(title);
+	tft.setCursor(x + 320-60, y + 6);
+	tft.printf("Bat:100%%");
+}
+
+void draw_apps(uint16_t x, uint16_t y) {
+	for (int i=0;i<3;i++) {
+		for (int j=0; j<2; j++) {
+			draw_app(x + 8 + ((96 + 8) * i), y + 9 + ((96 + 10) * j), i + j * 3);
+		}
+	}
+}
+
+void draw_app(uint16_t x, uint16_t y, uint8_t app_nb) {
+	tft.fillRect(x, y, 96, 96, ILI9341_BLACK);
+	tft.drawRect(x, y, 96, 96, ILI9341_RED);
+
+	tft.setCursor(x + 10, y + 10);
+	tft.printf("App: %d", app_nb);
+
+	tft.setCursor(x + 10, y + 10 + 8);
+	tft.printf("x:   %d", x);
+	tft.setCursor(x + 10, y + 10 + 8 + 8);
+	tft.printf("y:   %d", y);
 }
 
 void update_tft() {
@@ -255,6 +304,7 @@ void update_tft() {
 	#ifdef USE_TFT
 		// tft.fillScreen(ILI9341_BLACK);
 		tft.setCursor(0, 0);
+		// tft.println("Hello");
 	#endif
 
 	#if defined(USE_TFT) && defined(PRINT_ADC)

@@ -1,9 +1,9 @@
 // #define OLD
 
-#define USE_RADIO
+// #define USE_RADIO
 #define USE_TFT
 // #define USE_LED
-#define USE_SD
+// #define USE_SD
 #define USE_TS
 #define USE_ADC
 // #define USE_WIFI
@@ -16,10 +16,10 @@
 	#endif
 #endif
 
-#define PRINT_ADC
-#define PRINT_TS
-#define PRINT_RADIO
-#define PRINT_SD
+// #define PRINT_ADC
+// #define PRINT_TS
+// #define PRINT_RADIO
+// #define PRINT_SD
 
 #define FONT_SIZE 1
 
