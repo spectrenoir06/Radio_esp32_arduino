@@ -1,6 +1,10 @@
 
 #include <SPI.h>
 #include <Adafruit_GFX.h>
+
+#include <Fonts/FreeMono9pt7b.h>
+#include <Fonts/FreeMonoBold9pt7b.h>
+
 #include <Adafruit_ILI9341.h>
 #include <Adafruit_NeoPixel.h>
 #include <Adafruit_MCP3008.h>
@@ -40,7 +44,7 @@ uint8_t  Channel_AUX;
 #endif
 
 //Serial protocol
-uint8_t sub_protocol;
+uint8_t sub_protocol = H8S3D;
 uint8_t protocol;
 uint8_t option;
 uint8_t cur_protocol[3];
@@ -50,7 +54,7 @@ uint8_t prev_power=0xFD; // unused power value
 
 // Protocol variables
 uint8_t  cyrfmfg_id[6];//for dsm2 and devo
-uint8_t  rx_tx_addr[5];
+uint8_t  rx_tx_addr[5] = {0xE7,0xE7,0xE7,0xE7,0xE7};
 uint8_t  rx_id[4];
 uint8_t  phase;
 uint16_t bind_counter;
@@ -80,6 +84,57 @@ uint16_t adc_value[8];
 
 uint8_t mode_select;
 uint8_t protocol_flags=0,protocol_flags2=0;
+
+
+uint8_t item_select = 0;
+uint8_t item_select_old = 0;
+
+typedef enum item_type {
+	text = 0,
+	text_input,
+	float_input,
+	sub_menu,
+	select,
+	slider
+};
+
+typedef struct s_item {
+	char title[256];
+	item_type type;
+
+} t_item;
+
+typedef struct s_menu {
+	char title[256];
+	t_item items[20];
+	uint16_t item_nb;
+} t_menu;
+
+
+
+t_menu menu = {
+	"Main Menu",
+	{
+		{
+			"About",
+			text
+		},
+		{
+			"Model menu",
+			text
+		},
+		{
+			"Wifi setting",
+			text
+		},
+		{
+			"ADC TEST",
+			text
+		}
+	},
+	4
+};
+
 
 #ifdef USE_TFT
 	Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CSN_pin, TFT_DC_pin);
@@ -111,7 +166,7 @@ uint8_t protocol_flags=0,protocol_flags2=0;
 #ifdef USE_WIFI
 	const char * networkName = WIFI_SSID;
 	const char * networkPswd = WIFI_PASSWORD;
-	const char * udpAddress = "192.168.11.169";
+	const char * udpAddress = "192.168.0.24";
 	const int udpPort = 1234;
 
 	boolean connected = false;
@@ -177,6 +232,12 @@ void setup() {
 
 	#ifdef USE_TS
 		ts.begin();
+		ts.setCalc(
+			520,
+			3320,
+			720,
+			3435
+		);
 	#endif
 
 	#ifdef USE_EXT_ADC
@@ -246,13 +307,30 @@ void setup() {
 		WiFi.begin(networkName, networkPswd);
 	#endif
 
-	// initBAYANG();
-	// delay(5);
+	initBAYANG();
+	delay(5);
 
-	tft.fillScreen(ILI9341_CYAN);
+	tft.fillScreen(COLOR_BACK);
+
+	// tft.setFont(&FreeMono18pt7b);
 
 	draw_titlebar(0, 0, "Main Menu");
-	draw_apps(0, 20);
+	// draw_apps(0, 20);
+
+	t_item item = {
+		"test",
+		text
+	};
+
+	for (size_t i = 0; i < 6; i++) {
+		draw_item(20, 20 + 8 + i * 35, menu.items[i], i == item_select);
+	}
+
+
+	// tft.fillRect(20, 20, 320-20, 40, ILI9341_BLACK);
+	// tft.fillRect(8, 20 + 9 + 96 + 10, 96, 96, ILI9341_BLACK);
+
+
 
 	// tft.fillRect(8, 20 + 9, 96, 96, ILI9341_BLACK);
 	// tft.fillRect(8, 20 + 9 + 96 + 10, 96, 96, ILI9341_BLACK);
@@ -269,12 +347,19 @@ void setup() {
 
 }
 
+uint16_t color565(uint8_t red, uint8_t green, uint8_t blue) {
+	return ((red & 0xF8) << 8) | ((green & 0xFC) << 3) | ((blue & 0xF8) >> 3);
+}
+
+
 void draw_titlebar(uint16_t x, uint16_t y, char *title) {
-	tft.fillRect(x, y, 320, 20, ILI9341_BLACK);
-	tft.drawRect(x, y, 320, 20, ILI9341_WHITE);
-	tft.setCursor(x + 10, y + 6);
+	tft.setFont(&FreeMono9pt7b);
+	tft.setTextColor(COLOR_TITLE_BAR_TEXT, COLOR_TITLE_BAR_BACK);
+	tft.fillRect(x, y, 320, 20, COLOR_TITLE_BAR_BACK);
+	// tft.drawRect(x, y, 320, 20, ILI93410x_WHITE);
+	tft.setCursor(x + 10, y + 15);
 	tft.printf(title);
-	tft.setCursor(x + 320-60, y + 6);
+	tft.setCursor(x + 320 - 100, y + 15);
 	tft.printf("Bat:100%%");
 }
 
@@ -299,6 +384,32 @@ void draw_app(uint16_t x, uint16_t y, uint8_t app_nb) {
 	tft.printf("y:   %d", y);
 }
 
+void draw_item(uint16_t x, uint16_t y, t_item item, uint8_t select) {
+	tft.setFont(&FreeMono9pt7b);
+	uint16_t color;
+	if (select == 1) {
+		color = COLOR_ITEM_BAR_BACK_SELECT;
+	} else {
+		color = COLOR_ITEM_BAR_BACK;
+	}
+	tft.fillRect(x, y, 280, 35, color);
+	tft.drawRect(x, y, 280, 35, COLOR_ITEM_BAR_BORDER);
+
+	tft.setCursor(x + 10, y + 12 + 11);
+	tft.setTextColor(ILI9341_BLACK, color);
+	tft.printf("%s", item.title);
+
+	tft.setCursor(x + 190, y + 12 + 11);
+	tft.setTextColor(ILI9341_DARKGREY, color);
+	tft.printf("[%d]", item.type);
+
+
+	// tft.setCursor(x + 10, y + 10 + 8);
+	// tft.printf("x:   %d", x);
+	// tft.setCursor(x + 10, y + 10 + 8 + 8);
+	// tft.printf("y:   %d", y);
+}
+
 void update_tft() {
 
 	#ifdef USE_TFT
@@ -318,7 +429,7 @@ void update_tft() {
 			tft.print("  [");
 			tft.print(chan);
 			tft.print("] = ");
-			tft.print(adc_value[chan]);
+			tft.print(Channel_data[chan]);
 			tft.println("   ");
 		}
 	#endif
@@ -326,11 +437,18 @@ void update_tft() {
 	#if defined(USE_TFT) && defined(USE_TS) && defined(PRINT_TS)
 		tft.println("\nTouchScreen:");
 		if (ts.touched()) {
-			TS_Point p = ts.getPoint();
-			tft.print("  x: "); tft.print(p.x); tft.println("   ");
-			tft.print("  y: "); tft.print(p.y); tft.println("   ");
-			tft.print("  z: "); tft.print(p.z); tft.println("   ");
-			// tft.drawCircle((int16_t)((p.x - 300) * .09), (int16_t)(p.y * .11376), 2, ILI9341_RED);
+			// TS_Point p = ts.getPoint();
+			// tft.println("\nRaw:");
+			// tft.print("x : "); tft.print(p.x); tft.println("  ");
+			// tft.print("y : "); tft.print(p.y); tft.println("  ");
+			// tft.print("z : "); tft.print(p.z); tft.println("  ");
+			TS_Point p = ts.getPointCalc();
+			// tft.println("\nCalibrate:");
+			tft.print("  x: "); tft.print(p.x); tft.println("     ");
+			tft.print("  y: "); tft.print(p.y); tft.println("     ");
+			tft.print("  z: "); tft.print(p.z); tft.println("     ");
+			// tft.fillCircle(p.x, p.y, 2, ILI9341_RED);
+
 			// Serial.print("x = "); Serial.println(p.x);
 			// Serial.print("y = "); Serial.println(p.y);
 		} else {
@@ -417,6 +535,19 @@ void update_tft() {
 		}
 	#endif
 
+	#if defined(USE_TFT) && defined(USE_WIFI) && defined(PRINT_WIFI)
+		tft.println("\nWifi:");
+		tft.print("  SSID: ");
+		tft.println(WIFI_SSID);
+		tft.print("  IP: ");
+		if (connected)
+			tft.println(WiFi.localIP());
+		else
+			tft.println("disconnected");
+	#endif
+
+	// tft.drawCircle( 30, 240-30, 2, ILI9341_RED);
+
 }
 
 void loop() {
@@ -434,34 +565,35 @@ void loop() {
 
 	#ifdef USE_EXT_ADC
 		for (int chan = 0; chan < 8; chan++) {
-			adc_value[chan] = adc.readADC(chan);
+			// adc_value[chan] = adc.readADC(chan);
+			Channel_data[chan] = adc.readADC(chan);
 			// Serial.print(adc_value[chan]); Serial.print("\t");
 		}
 		// Serial.println();
 	#endif
 
 	#ifdef USE_LED
-		// leds.setPixelColor(0, leds.Color(
-		// 	map(adc_value[0], 0, 1023, 0, 255),
-		// 	0,
-		// 	0
-		// ));
-		// leds.setPixelColor(1, leds.Color(
-		// 	0,
-		// 	map(adc_value[1], 0, 1023, 0, 255),
-		// 	0
-		// ));
-		// leds.setPixelColor(2, leds.Color(
-		// 	0,
-		// 	0,
-		// 	map(adc_value[2], 0, 1023, 0, 255)
-		// ));
-		// leds.setPixelColor(3, leds.Color(
-		// 	map(adc_value[3], 0, 1023, 0, 255),
-		// 	map(adc_value[3], 0, 1023, 0, 255),
-		// 	0
-		// ));
-		// leds.show();
+		leds.setPixelColor(0, leds.Color(
+			map(adc_value[0], 0, 1023, 0, 255),
+			0,
+			0
+		));
+		leds.setPixelColor(1, leds.Color(
+			0,
+			map(adc_value[1], 0, 1023, 0, 255),
+			0
+		));
+		leds.setPixelColor(2, leds.Color(
+			0,
+			0,
+			map(adc_value[2], 0, 1023, 0, 255)
+		));
+		leds.setPixelColor(3, leds.Color(
+			map(adc_value[3], 0, 1023, 0, 255),
+			map(adc_value[3], 0, 1023, 0, 255),
+			0
+		));
+		leds.show();
 	#endif
 
 	#ifdef USE_RADIO
@@ -473,28 +605,40 @@ void loop() {
 
 	#ifdef USE_WIFI
 		if(connected){
+			int16_t udp_data[8];
+			udp_data[0] = (adc_value[0] * 2) - 1024;
+			udp_data[1] = (adc_value[0] * 2) - 1024;
+			float a = (((adc_value[1] * 2) - 1024) / 1024.0);
 			//Send a packet
 			udp.beginPacket(udpAddress, udpPort);
-				udp.write((uint8_t *)adc_value, PAYLOAD_SIZE);
+				udp.write((uint8_t *)udp_data, PAYLOAD_SIZE);
 			udp.endPacket();
 		}
 	#endif
 
-	update_tft();
+	// update_tft();
 
-	// while(1) {
-	// 	int x = 320-10;
-	// 	int y = 240-10;
-	// 	tft.drawCircle(x, y, 2, ILI9341_RED);
-	// 	while (!ts.touched());
-	// 	TS_Point p = ts.getPoint();
-	// 	Serial.print("  x: "); Serial.print(p.x); Serial.println("   ");
-	// 	Serial.print("  y: "); Serial.print(p.y); Serial.println("   ");
-	// 	delay(1000);
+	// if  (!ts.touched()); {
+	// 	TS_Point p = ts.getPointCalc();
+	// 	tft.fillCircle(p.x,p.y,2,ILI9341_RED);
 	// }
 
 
-	// BAYANG_callback();
+	// if (adc_value[2] > 800 && item_select < 5) {
+	// 	item_select_old = item_select;
+	// 	item_select++;
+	// 	draw_item(20, 20 + 8 + item_select * 35, menu.items[item_select], true);
+	// 	draw_item(20, 20 + 8 + item_select_old * 35, menu.items[item_select_old], false);
+	// 	delay(200);
+	// } else if (adc_value[2] < 200 && item_select > 0) {
+	// 	item_select_old = item_select;
+	// 	item_select--;
+	// 	draw_item(20, 20 + 8 + item_select * 35, menu.items[item_select], true);
+	// 	draw_item(20, 20 + 8 + item_select_old * 35, menu.items[item_select_old], false);
+	// 	delay(200);
+	// }
+
+	BAYANG_callback();
 	delay(5);
 }
 
@@ -503,17 +647,17 @@ void loop() {
 	void WiFiEvent(WiFiEvent_t event){
 		switch(event) {
 			case SYSTEM_EVENT_STA_GOT_IP:
-			//When connected set
-			Serial.print("WiFi connected! IP address: ");
-			Serial.println(WiFi.localIP());
-			//initializes the UDP state
-			//This initializes the transfer buffer
-			udp.begin(WiFi.localIP(),udpPort);
-			connected = true;
-			break;
+				//When connected set
+				Serial.print("WiFi connected! IP address: ");
+				Serial.println(WiFi.localIP());
+				//initializes the UDP state
+				//This initializes the transfer buffer
+				udp.begin(WiFi.localIP(),udpPort);
+				connected = true;
+				break;
 			case SYSTEM_EVENT_STA_DISCONNECTED:
-			Serial.println("WiFi lost connection");
-			connected = false;
+				Serial.println("WiFi lost connection");
+				connected = false;
 			break;
 		}
 	}

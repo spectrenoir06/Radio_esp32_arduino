@@ -100,7 +100,7 @@ enum DSM
 	DSM_AUTO = 4
 };
 enum YD717
-{       			
+{
 	YD717	= 0,
 	SKYWLKR	= 1,
 	SYMAX4	= 2,
@@ -142,14 +142,14 @@ enum Q2X2
 };
 enum CG023
 {
-    CG023	= 0,
-    YD829	= 1,
+	CG023	= 0,
+	YD829	= 1,
 };
 enum BAYANG
 {
-    BAYANG	= 0,
-    H8S3D	= 1,
-    X16_AH  = 2,
+	BAYANG	= 0,
+	H8S3D	= 1,
+	X16_AH  = 2,
 	IRDRONE = 3,
 };
 enum MT99XX
@@ -417,7 +417,7 @@ enum A7105_POWER
 
 // NRF Power
 // Power setting is 0..3 for nRF24L01
-// Claimed power amp for nRF24L01 from eBay is 20dBm. 
+// Claimed power amp for nRF24L01 from eBay is 20dBm.
 enum NRF_POWER
 {						//      Raw            w 20dBm PA
 	NRF_POWER_0 = 0x00,	// 0 : -18dBm  (16uW)   2dBm (1.6mW)

@@ -19,7 +19,7 @@ Multiprotocol is distributed in the hope that it will be useful,
 
 #include "iface_nrf24l01.h"
 
-#define BAYANG_BIND_COUNT		1000
+#define BAYANG_BIND_COUNT		10
 #define BAYANG_PACKET_PERIOD	1000
 #define BAYANG_INITIAL_WAIT		500
 #define BAYANG_PACKET_SIZE		15
@@ -90,45 +90,47 @@ static void __attribute__((unused)) BAYANG_send_packet(uint8_t bind)
 
 		//Flags packet[2]
 		packet[2] = 0x00;
-		if(CH5_SW)
-			packet[2] = BAYANG_FLAG_FLIP;
-		if(CH6_SW)
-			packet[2] |= BAYANG_FLAG_RTH;
-		if(CH7_SW)
-			packet[2] |= BAYANG_FLAG_PICTURE;
-		if(CH8_SW)
-			packet[2] |= BAYANG_FLAG_VIDEO;
-		if(CH9_SW)
-		{
-			packet[2] |= BAYANG_FLAG_HEADLESS;
+		// if(CH5_SW)
+		// 	packet[2] = BAYANG_FLAG_FLIP;
+		// if(CH6_SW)
+		// 	packet[2] |= BAYANG_FLAG_RTH;
+		// if(CH7_SW)
+		// 	packet[2] |= BAYANG_FLAG_PICTURE;
+		// if(CH8_SW)
+		// 	packet[2] |= BAYANG_FLAG_VIDEO;
+		// if(CH9_SW)
+		// {
+		// 	packet[2] |= BAYANG_FLAG_HEADLESS;
 			dyntrim = 0;
-		}
+		// }
 		//Flags packet[3]
 		packet[3] = 0x00;
-		if(CH10_SW)
-			packet[3] = BAYANG_FLAG_INVERTED;
-		if(CH11_SW)
-			dyntrim = 0;
-		if(CH12_SW)
-			packet[3] |= BAYANG_FLAG_TAKE_OFF;
-		if(CH13_SW)
-			packet[3] |= BAYANG_FLAG_EMG_STOP;
+		// if(CH10_SW)
+		// 	packet[3] = BAYANG_FLAG_INVERTED;
+		// if(CH11_SW)
+		// 	dyntrim = 0;
+		// if(CH12_SW)
+		// 	packet[3] |= BAYANG_FLAG_TAKE_OFF;
+		// if(CH13_SW)
+		// 	packet[3] |= BAYANG_FLAG_EMG_STOP;
 		//Aileron
-		val = convert_channel_10b(AILERON);
+		val = Channel_data[AILERON];
 		packet[4] = (val>>8) + (dyntrim ? ((val>>2) & 0xFC) : 0x7C);
 		packet[5] = val & 0xFF;
 		//Elevator
-		val = convert_channel_10b(ELEVATOR);
+		val = Channel_data[ELEVATOR];
 		packet[6] = (val>>8) + (dyntrim ? ((val>>2) & 0xFC) : 0x7C);
 		packet[7] = val & 0xFF;
 		//Throttle
-		val = convert_channel_10b(THROTTLE);
+		val = Channel_data[THROTTLE];
 		packet[8] = (val>>8) + 0x7C;
 		packet[9] = val & 0xFF;
 		//Rudder
-		val = convert_channel_10b(RUDDER);
+		val = Channel_data[RUDDER];
 		packet[10] = (val>>8) + (dyntrim ? ((val>>2) & 0xFC) : 0x7C);
 		packet[11] = val & 0xFF;
+
+			// Serial.println("send");
 	}
 	switch (sub_protocol)
 	{
@@ -273,6 +275,7 @@ uint16_t BAYANG_callback()
 			else
 		#endif
 				packet_count%=2;
+		Serial.println("send data");
 	}
 	else
 	{
@@ -291,6 +294,7 @@ uint16_t BAYANG_callback()
 			packet_count++;
 			packet_count%=4;
 			bind_counter--;
+			Serial.println("send Bind");
 		}
 	}
 	return BAYANG_PACKET_PERIOD;
