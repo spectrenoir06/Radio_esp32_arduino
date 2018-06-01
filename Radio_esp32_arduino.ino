@@ -129,14 +129,14 @@ uint8_t   m_nPosG = 0;
 uint8_t   m_nPosB = 0;
 
 char*	text[8] = {
-	"ADC1",
-	"ADC2",
-	"ADC3",
-	"ADC4",
-	"ADC5",
-	"ADC6",
-	"ADC7",
-	"ADC8"
+	"ADC1:",
+	"ADC2:",
+	"ADC3:",
+	"ADC4:",
+	"ADC5:",
+	"ADC6:",
+	"ADC7:",
+	"ADC8:"
 };
 
 
@@ -181,8 +181,9 @@ bool InitOverlays()
 	for (int i=0; i < 8; i++) {
 		pElemRef = gslc_ElemCreateTxt(&m_gui,GSLC_ID_AUTO,E_PG_MAIN,(gslc_tsRect){20,20 + i * 15,50,10},
 			text[i],0,E_FONT_TXT);
+		gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_WHITE);
 		pElemRef = gslc_ElemXGaugeCreate(&m_gui,E_ELEM_PROGRESS0 + i,E_PG_MAIN,&m_sXGauge[i],
-			(gslc_tsRect){50,20 + i * 15,50,10},0,100,0,GSLC_COL_YELLOW,false);
+			(gslc_tsRect){60, 20 + i * 15, 80, 10},0,100,0,GSLC_COL_YELLOW,false);
 		m_pElemProgress[i] = pElemRef; // Save for quick access
 	}
 
