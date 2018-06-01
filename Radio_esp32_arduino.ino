@@ -22,6 +22,10 @@
 #include "TX_Def.h"
 #include "wifi_config.h"
 
+#include "GUIslice.h"
+#include "GUIslice_ex.h"
+#include "GUIslice_drv.h"
+
 // #include "audio.hpp"
 
 #define PAYLOAD_SIZE 16
@@ -80,7 +84,7 @@ uint8_t  len;
 uint8_t  RX_num;
 uint8_t addresses[5] = {0xe7,0xe7,0xe7,0xe7,0xe7};
 
-uint16_t adc_value[8];
+// uint16_t adc_value[8];
 
 uint8_t mode_select;
 uint8_t protocol_flags=0,protocol_flags2=0;
@@ -89,51 +93,137 @@ uint8_t protocol_flags=0,protocol_flags2=0;
 uint8_t item_select = 0;
 uint8_t item_select_old = 0;
 
-typedef enum item_type {
-	text = 0,
-	text_input,
-	float_input,
-	sub_menu,
-	select,
-	slider
+
+// Enumerations for pages, elements, fonts, images
+enum {
+	E_PG_MAIN,
+	E_PG_ADC,
 };
 
-typedef struct s_item {
-	char title[256];
-	item_type type;
-
-} t_item;
-
-typedef struct s_menu {
-	char title[256];
-	t_item items[20];
-	uint16_t item_nb;
-} t_menu;
-
-
-
-t_menu menu = {
-	"Main Menu",
-	{
-		{
-			"About",
-			text
-		},
-		{
-			"Model menu",
-			text
-		},
-		{
-			"Wifi setting",
-			text
-		},
-		{
-			"ADC TEST",
-			text
-		}
-	},
-	4
+enum {
+	E_ELEM_BOX,
+	E_ELEM_PROGRESS0,
+	E_ELEM_PROGRESS1,
+	E_ELEM_PROGRESS2,
+	E_ELEM_PROGRESS3,
+	E_ELEM_PROGRESS4,
+	E_ELEM_PROGRESS5,
+	E_ELEM_PROGRESS6,
+	E_ELEM_PROGRESS7,
+	E_SLIDER_R,
+	E_SLIDER_G,
+	E_SLIDER_B,
 };
+
+enum {
+	E_FONT_BTN,
+	E_FONT_TXT
+};
+
+enum {
+	E_GROUP1
+};
+
+uint8_t   m_nPosR = 0;
+uint8_t   m_nPosG = 0;
+uint8_t   m_nPosB = 0;
+
+char*	text[8] = {
+	"ADC1",
+	"ADC2",
+	"ADC3",
+	"ADC4",
+	"ADC5",
+	"ADC6",
+	"ADC7",
+	"ADC8"
+};
+
+
+// Instantiate the GUI
+#define MAX_PAGE                1
+#define MAX_FONT                2
+
+// Define the maximum number of elements per page
+#define MAX_ELEM_PG_MAIN          50                                        // # Elems total
+#define MAX_ELEM_PG_MAIN_RAM      MAX_ELEM_PG_MAIN                          // # Elems in RAM
+
+gslc_tsGui                  m_gui;
+gslc_tsDriver               m_drv;
+gslc_tsFont                 m_asFont[MAX_FONT];
+gslc_tsPage                 m_asPage[MAX_PAGE];
+gslc_tsElem                 m_asPageElem[MAX_ELEM_PG_MAIN_RAM];
+gslc_tsElemRef              m_asPageElemRef[MAX_ELEM_PG_MAIN];
+
+gslc_tsXGauge               m_sXGauge[8];
+
+gslc_tsElemRef*             m_pElemProgress[8];
+
+// Define debug message function
+static int16_t DebugOut(char ch) { Serial.write(ch); return 0; }
+
+// Create page elements
+bool InitOverlays()
+{
+	gslc_tsElemRef* pElemRef;
+
+	gslc_PageAdd(&m_gui,E_PG_MAIN,m_asPageElem,MAX_ELEM_PG_MAIN_RAM,m_asPageElemRef,MAX_ELEM_PG_MAIN);
+
+	// Background flat color
+	gslc_SetBkgndColor(&m_gui,GSLC_COL_GRAY_DK2);
+
+	// Create background box
+	pElemRef = gslc_ElemCreateBox(&m_gui,E_ELEM_BOX,E_PG_MAIN,(gslc_tsRect){10,10,300,220});
+	gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_WHITE,GSLC_COL_BLACK,GSLC_COL_BLACK);
+
+
+	// Create progress bar (horizontal)
+	for (int i=0; i < 8; i++) {
+		pElemRef = gslc_ElemCreateTxt(&m_gui,GSLC_ID_AUTO,E_PG_MAIN,(gslc_tsRect){20,20 + i * 15,50,10},
+			text[i],0,E_FONT_TXT);
+		pElemRef = gslc_ElemXGaugeCreate(&m_gui,E_ELEM_PROGRESS0 + i,E_PG_MAIN,&m_sXGauge[i],
+			(gslc_tsRect){50,20 + i * 15,50,10},0,100,0,GSLC_COL_YELLOW,false);
+		m_pElemProgress[i] = pElemRef; // Save for quick access
+	}
+
+
+	// Create three sliders (R,G,B) and assign callback function
+	// that is invoked upon change. The common callback will update
+	// the color box.
+
+	// Static text label
+	gslc_ElemCreateTxt_P(&m_gui,106,E_PG_MAIN,20,140,30,20,"Red:",&m_asFont[0],
+		GSLC_COL_GRAY_LT3,GSLC_COL_BLACK,GSLC_COL_BLACK,GSLC_ALIGN_MID_LEFT,false,true);
+	// Slider
+	gslc_ElemXSliderCreate_P(&m_gui,E_SLIDER_R,E_PG_MAIN,60,140,80,20,
+		0,255,0,5,false,GSLC_COL_RED,GSLC_COL_BLACK);
+	pElemRef = gslc_PageFindElemById(&m_gui,E_PG_MAIN,E_SLIDER_R);
+	gslc_ElemXSliderSetStyle(&m_gui,pElemRef,true,GSLC_COL_RED_DK4,10,5,GSLC_COL_GRAY_DK2);
+	gslc_ElemXSliderSetPosFunc(&m_gui,pElemRef,&CbSlidePos);
+
+	// Static text label
+	gslc_ElemCreateTxt_P(&m_gui,107,E_PG_MAIN,20,160,30,20,"Green:",&m_asFont[0],
+		GSLC_COL_GRAY_LT3,GSLC_COL_BLACK,GSLC_COL_BLACK,GSLC_ALIGN_MID_LEFT,false,true);
+	// Slider
+	gslc_ElemXSliderCreate_P(&m_gui,E_SLIDER_G,E_PG_MAIN,60,160,80,20,
+		0,255,0,5,false,GSLC_COL_GREEN,GSLC_COL_BLACK);
+	pElemRef = gslc_PageFindElemById(&m_gui,E_PG_MAIN,E_SLIDER_G);
+	gslc_ElemXSliderSetStyle(&m_gui,pElemRef,true,GSLC_COL_GREEN_DK4,10,5,GSLC_COL_GRAY_DK2);
+	gslc_ElemXSliderSetPosFunc(&m_gui,pElemRef,&CbSlidePos);
+
+	// Static text label
+	gslc_ElemCreateTxt_P(&m_gui,108,E_PG_MAIN,20,180,30,20,"Blue:",&m_asFont[0],
+		GSLC_COL_GRAY_LT3,GSLC_COL_BLACK,GSLC_COL_BLACK,GSLC_ALIGN_MID_LEFT,false,true);
+	// Slider
+	gslc_ElemXSliderCreate_P(&m_gui,E_SLIDER_B,E_PG_MAIN,60,180,80,20,
+		0,255,0,5,false,GSLC_COL_BLUE,GSLC_COL_BLACK);
+	pElemRef = gslc_PageFindElemById(&m_gui,E_PG_MAIN,E_SLIDER_B);
+	gslc_ElemXSliderSetStyle(&m_gui,pElemRef,true,GSLC_COL_BLUE_DK4,10,5,GSLC_COL_GRAY_DK2);
+	gslc_ElemXSliderSetPosFunc(&m_gui,pElemRef,&CbSlidePos);
+
+	return true;
+}
+
 
 
 #ifdef USE_TFT
@@ -161,6 +251,9 @@ t_menu menu = {
 	uint8_t cardType;
 	uint8_t cardState;
 	uint64_t cardSize;
+	char *str_cardType;
+	char *str_cardState;
+	char *str_cardSize;
 #endif
 
 #ifdef USE_WIFI
@@ -173,9 +266,104 @@ t_menu menu = {
 	WiFiUDP udp;
 #endif
 
+//
+// typedef enum item_type {
+// 	text = 0,
+// 	text_input,
+// 	float_input,
+// 	sub_menu,
+// 	select,
+// 	slider
+// };
+//
+// typedef struct s_item {
+// 	char title[256];
+// 	item_type type;
+// 	char *data;
+// } t_item;
+//
+// typedef struct s_menu {
+// 	char title[256];
+// 	t_item items[20];
+// 	uint16_t item_nb;
+// } t_menu;
+//
+// t_menu menu = {
+// 	"Main Menu",
+// 	{
+// 		{
+// 			"About",
+// 			text,
+// 		},
+// 		{
+// 			"Model menu",
+// 			text
+// 		},
+// 		{
+// 			"Wifi setting",
+// 			text
+// 		},
+// 		{
+// 			"ADC TEST",
+// 			text
+// 		}
+// 	},
+// 	4
+// };
+
+
+// Callback function for when a slider's position has been updated
+// - After a slider position has been changed, update the color box
+// - Note that all three sliders use the same callback for
+//   convenience. From the element's ID we can determine which
+//   slider was updated.
+bool CbSlidePos(void* pvGui,void* pvElemRef,int16_t nPos)
+{
+	gslc_tsGui*     pGui      = (gslc_tsGui*)(pvGui);
+	gslc_tsElemRef* pElemRef  = (gslc_tsElemRef*)(pvElemRef);
+	gslc_tsElem*    pElem     = gslc_GetElemFromRef(pGui,pElemRef);
+	//gslc_tsXSlider* pSlider = (gslc_tsXSlider*)(pElem->pXData);
+
+	// Fetch the new RGB component from the slider
+	switch (pElem->nId) {
+		case E_SLIDER_R:
+			m_nPosR = gslc_ElemXSliderGetPos(pGui,pElemRef);
+			break;
+		case E_SLIDER_G:
+			m_nPosG = gslc_ElemXSliderGetPos(pGui,pElemRef);
+			break;
+		case E_SLIDER_B:
+			m_nPosB = gslc_ElemXSliderGetPos(pGui,pElemRef);
+			break;
+		default:
+			break;
+	}
+
+	// Calculate the new RGB value
+	gslc_tsColor colRGB = (gslc_tsColor){m_nPosR,m_nPosG,m_nPosB};
+	if (m_nPosR < 50) m_nPosR = 0;
+	if (m_nPosG < 50) m_nPosG = 0;
+	if (m_nPosB < 50) m_nPosB = 0;
+
+	Serial.print(m_nPosR);Serial.print(" ,");
+	Serial.print(m_nPosG);Serial.print(" ,");
+	Serial.println(m_nPosB);
+
+	#ifdef USE_LED
+		leds.setPixelColor(0, leds.Color(m_nPosR,m_nPosG,m_nPosB));
+		leds.show();
+	#endif
+
+	// Update the color box
+	// gslc_tsElemRef* pElemColor = gslc_PageFindElemById(pGui,E_PG_MAIN,E_ELEM_COLOR);
+	// gslc_ElemSetCol(pGui,pElemColor,GSLC_COL_WHITE,colRGB,GSLC_COL_WHITE);
+
+	return true;
+}
 
 void setup() {
 	Serial.begin(115200);
+	gslc_InitDebug(&DebugOut);
 	SPI.begin();
 
 	pinMode(TFT_CSN_pin, OUTPUT);
@@ -205,25 +393,34 @@ void setup() {
 	CYRF_CSN_on;
 	CYRF_RST_HI; //reset cyrf
 
+	if (!gslc_Init(&m_gui,&m_drv,m_asPage,MAX_PAGE,m_asFont,MAX_FONT)) { return; }
+	if (!gslc_FontAdd(&m_gui,E_FONT_BTN,GSLC_FONTREF_PTR,NULL,1)) { return; }
+	if (!gslc_FontAdd(&m_gui,E_FONT_TXT,GSLC_FONTREF_PTR,NULL,1)) { return; }
+
+	InitOverlays();
+
+	// Start up display on main page
+	gslc_SetPageCur(&m_gui,E_PG_MAIN);
+
 	#ifdef USE_LED
 		leds.begin();
 		leds.show();
-		delay(10);
-		leds.setPixelColor(0, leds.Color(255, 0, 0));
-		leds.show();
-		delay(500);
-		leds.setPixelColor(0, leds.Color(255, 255, 0));
-		leds.show();
-		delay(500);
-		leds.setPixelColor(0, leds.Color(0, 0, 255));
-		leds.show();
-		delay(500);
-		leds.setPixelColor(0, leds.Color(255, 255, 255));
-		leds.show();
-		delay(500);
-		leds.setPixelColor(0, leds.Color(0, 0, 0));
-		leds.show();
-		delay(500);
+		// delay(10);
+		// leds.setPixelColor(0, leds.Color(255, 0, 0));
+		// leds.show();
+		// delay(500);
+		// leds.setPixelColor(0, leds.Color(255, 255, 0));
+		// leds.show();
+		// delay(500);
+		// leds.setPixelColor(0, leds.Color(0, 0, 255));
+		// leds.show();
+		// delay(500);
+		// leds.setPixelColor(0, leds.Color(255, 255, 255));
+		// leds.show();
+		// delay(500);
+		// leds.setPixelColor(0, leds.Color(0, 0, 0));
+		// leds.show();
+		// delay(500);
 	#endif
 
 	#ifdef USE_TFT
@@ -252,6 +449,8 @@ void setup() {
 			cardType = SD.cardType();
 			if(cardType == CARD_NONE){
 				Serial.println("No SD card attached");
+				str_cardType = strdup("No SD card attached");
+				// menu.items[0].data = strdup("No SD card attached");
 				cardState = 1;
 			} else {
 				Serial.print("SD Card Type: ");
@@ -307,108 +506,10 @@ void setup() {
 		WiFi.begin(networkName, networkPswd);
 	#endif
 
-	initBAYANG();
+	// initBAYANG();
 	delay(5);
-
-	tft.fillScreen(COLOR_BACK);
-
-	// tft.setFont(&FreeMono18pt7b);
-
-	draw_titlebar(0, 0, "Main Menu");
-	// draw_apps(0, 20);
-
-	t_item item = {
-		"test",
-		text
-	};
-
-	for (size_t i = 0; i < 6; i++) {
-		draw_item(20, 20 + 8 + i * 35, menu.items[i], i == item_select);
-	}
-
-
-	// tft.fillRect(20, 20, 320-20, 40, ILI9341_BLACK);
-	// tft.fillRect(8, 20 + 9 + 96 + 10, 96, 96, ILI9341_BLACK);
-
-
-
-	// tft.fillRect(8, 20 + 9, 96, 96, ILI9341_BLACK);
-	// tft.fillRect(8, 20 + 9 + 96 + 10, 96, 96, ILI9341_BLACK);
-    //
-    //
-	// tft.fillRect(8 + 96 + 8, 20 + 9, 96, 96, ILI9341_BLACK);
-	// tft.fillRect(8 + 96 + 8, 20 + 9 + 96 + 10, 96, 96, ILI9341_BLACK);
-    //
-	// tft.fillRect(8 + 96 + 8 + 96 + 8, 20 + 9, 96, 96, ILI9341_BLACK);
-	// tft.fillRect(8 + 96 + 8 + 96 + 8, 20 + 9 + 96 + 10, 96, 96, ILI9341_BLACK);
-    //
-    //
-	// // tft.drawRect(100, 100, 96, 96, ILI9341_WHITE);
-
 }
 
-uint16_t color565(uint8_t red, uint8_t green, uint8_t blue) {
-	return ((red & 0xF8) << 8) | ((green & 0xFC) << 3) | ((blue & 0xF8) >> 3);
-}
-
-
-void draw_titlebar(uint16_t x, uint16_t y, char *title) {
-	tft.setFont(&FreeMono9pt7b);
-	tft.setTextColor(COLOR_TITLE_BAR_TEXT, COLOR_TITLE_BAR_BACK);
-	tft.fillRect(x, y, 320, 20, COLOR_TITLE_BAR_BACK);
-	// tft.drawRect(x, y, 320, 20, ILI93410x_WHITE);
-	tft.setCursor(x + 10, y + 15);
-	tft.printf(title);
-	tft.setCursor(x + 320 - 100, y + 15);
-	tft.printf("Bat:100%%");
-}
-
-void draw_apps(uint16_t x, uint16_t y) {
-	for (int i=0;i<3;i++) {
-		for (int j=0; j<2; j++) {
-			draw_app(x + 8 + ((96 + 8) * i), y + 9 + ((96 + 10) * j), i + j * 3);
-		}
-	}
-}
-
-void draw_app(uint16_t x, uint16_t y, uint8_t app_nb) {
-	tft.fillRect(x, y, 96, 96, ILI9341_BLACK);
-	tft.drawRect(x, y, 96, 96, ILI9341_RED);
-
-	tft.setCursor(x + 10, y + 10);
-	tft.printf("App: %d", app_nb);
-
-	tft.setCursor(x + 10, y + 10 + 8);
-	tft.printf("x:   %d", x);
-	tft.setCursor(x + 10, y + 10 + 8 + 8);
-	tft.printf("y:   %d", y);
-}
-
-void draw_item(uint16_t x, uint16_t y, t_item item, uint8_t select) {
-	tft.setFont(&FreeMono9pt7b);
-	uint16_t color;
-	if (select == 1) {
-		color = COLOR_ITEM_BAR_BACK_SELECT;
-	} else {
-		color = COLOR_ITEM_BAR_BACK;
-	}
-	tft.fillRect(x, y, 280, 35, color);
-	tft.drawRect(x, y, 280, 35, COLOR_ITEM_BAR_BORDER);
-
-	tft.setCursor(x + 10, y + 12 + 11);
-	tft.setTextColor(ILI9341_BLACK, color);
-	tft.printf("%s", item.title);
-
-	tft.setCursor(x + 190, y + 12 + 11);
-	tft.setTextColor(ILI9341_DARKGREY, color);
-	tft.printf("[%d]", item.type);
-
-
-	// tft.setCursor(x + 10, y + 10 + 8);
-	// tft.printf("x:   %d", x);
-	// tft.setCursor(x + 10, y + 10 + 8 + 8);
-	// tft.printf("y:   %d", y);
-}
 
 void update_tft() {
 
@@ -426,11 +527,12 @@ void update_tft() {
 			tft.println("(INT)");
 		#endif
 		for (int chan=0;chan,chan<8;chan++) {
-			tft.print("  [");
-			tft.print(chan);
-			tft.print("] = ");
-			tft.print(Channel_data[chan]);
-			tft.println("   ");
+			tft.printf("  [%d] = %04x [%02d%%]\n", chan, Channel_data[chan], map(Channel_data[chan],0x0000, 0xFFFF, 0, 99));
+			// tft.print("  [");
+			// tft.print(chan);
+			// tft.print("] = ");
+			// tft.print(Channel_data[chan]);
+			// tft.println("   ");
 		}
 	#endif
 
@@ -536,10 +638,7 @@ void update_tft() {
 	#endif
 
 	#if defined(USE_TFT) && defined(USE_WIFI) && defined(PRINT_WIFI)
-		tft.println("\nWifi:");
-		tft.print("  SSID: ");
-		tft.println(WIFI_SSID);
-		tft.print("  IP: ");
+		tft.printf("\nWifi:\n  SSID: %s\n  IP: ", WIFI_SSID);
 		if (connected)
 			tft.println(WiFi.localIP());
 		else
@@ -553,10 +652,10 @@ void update_tft() {
 void loop() {
 
 	#if  defined(USE_INT_ADC)
-		Channel_data[0] = map16b(analogRead(36), 0, 4095, CHANNEL_MIN_100, CHANNEL_MAX_100);
-		Channel_data[1] = map16b(analogRead(39), 0, 4095, CHANNEL_MIN_100, CHANNEL_MAX_100);
-		Channel_data[2] = map16b(analogRead(34), 0, 4095, CHANNEL_MIN_100, CHANNEL_MAX_100);
-		Channel_data[3] = map16b(analogRead(35), 0, 4095, CHANNEL_MIN_100, CHANNEL_MAX_100);
+		Channel_data[0] = map(analogRead(36), 0x00, 0xFFF, 0x00, 0xFFFF); // 12bit to 16bit
+		Channel_data[1] = map(analogRead(39), 0x00, 0xFFF, 0x00, 0xFFFF);
+		Channel_data[2] = map(analogRead(34), 0x00, 0xFFF, 0x00, 0xFFFF);
+		Channel_data[3] = map(analogRead(35), 0x00, 0xFFF, 0x00, 0xFFFF);
 		Channel_data[4] = 127;
 		Channel_data[5] = 255;
 		Channel_data[6] = 511;
@@ -565,35 +664,34 @@ void loop() {
 
 	#ifdef USE_EXT_ADC
 		for (int chan = 0; chan < 8; chan++) {
-			// adc_value[chan] = adc.readADC(chan);
-			Channel_data[chan] = adc.readADC(chan);
-			// Serial.print(adc_value[chan]); Serial.print("\t");
+			Channel_data[chan] = map(adc.readADC(chan), 0x00, 0x3FF, 0x00, 0xFFFF);
+			// Serial.print(Channel_data[chan]); Serial.print("\t");
 		}
 		// Serial.println();
 	#endif
 
 	#ifdef USE_LED
-		leds.setPixelColor(0, leds.Color(
-			map(adc_value[0], 0, 1023, 0, 255),
-			0,
-			0
-		));
-		leds.setPixelColor(1, leds.Color(
-			0,
-			map(adc_value[1], 0, 1023, 0, 255),
-			0
-		));
-		leds.setPixelColor(2, leds.Color(
-			0,
-			0,
-			map(adc_value[2], 0, 1023, 0, 255)
-		));
-		leds.setPixelColor(3, leds.Color(
-			map(adc_value[3], 0, 1023, 0, 255),
-			map(adc_value[3], 0, 1023, 0, 255),
-			0
-		));
-		leds.show();
+		// leds.setPixelColor(0, leds.Color(
+		// 	Channel_data[0]>>8,
+		// 	0,
+		// 	0
+		// ));
+		// leds.setPixelColor(1, leds.Color(
+		// 	0,
+		// 	Channel_data[1]>>8,
+		// 	0
+		// ));
+		// leds.setPixelColor(2, leds.Color(
+		// 	0,
+		// 	0,
+		// 	Channel_data[2]>>8
+		// ));
+		// leds.setPixelColor(3, leds.Color(
+		// 	Channel_data[3]>>8,
+		// 	Channel_data[3]>>8,
+		// 	0
+		// ));
+		// leds.show();
 	#endif
 
 	#ifdef USE_RADIO
@@ -605,40 +703,20 @@ void loop() {
 
 	#ifdef USE_WIFI
 		if(connected){
-			int16_t udp_data[8];
-			udp_data[0] = (adc_value[0] * 2) - 1024;
-			udp_data[1] = (adc_value[0] * 2) - 1024;
-			float a = (((adc_value[1] * 2) - 1024) / 1024.0);
-			//Send a packet
 			udp.beginPacket(udpAddress, udpPort);
-				udp.write((uint8_t *)udp_data, PAYLOAD_SIZE);
+				udp.write((uint8_t *)Channel_data, PAYLOAD_SIZE);
 			udp.endPacket();
 		}
 	#endif
 
-	// update_tft();
-
-	// if  (!ts.touched()); {
-	// 	TS_Point p = ts.getPointCalc();
-	// 	tft.fillCircle(p.x,p.y,2,ILI9341_RED);
-	// }
+	for (int i=0; i < 8; i++)
+		gslc_ElemXGaugeUpdate(&m_gui,m_pElemProgress[i], map(Channel_data[i], 0x0000, 0xFFFF, 0, 99));
 
 
-	// if (adc_value[2] > 800 && item_select < 5) {
-	// 	item_select_old = item_select;
-	// 	item_select++;
-	// 	draw_item(20, 20 + 8 + item_select * 35, menu.items[item_select], true);
-	// 	draw_item(20, 20 + 8 + item_select_old * 35, menu.items[item_select_old], false);
-	// 	delay(200);
-	// } else if (adc_value[2] < 200 && item_select > 0) {
-	// 	item_select_old = item_select;
-	// 	item_select--;
-	// 	draw_item(20, 20 + 8 + item_select * 35, menu.items[item_select], true);
-	// 	draw_item(20, 20 + 8 + item_select_old * 35, menu.items[item_select_old], false);
-	// 	delay(200);
-	// }
+	// Periodically call GUIslice update function
+	gslc_Update(&m_gui);
 
-	BAYANG_callback();
+	// BAYANG_callback();
 	delay(5);
 }
 
