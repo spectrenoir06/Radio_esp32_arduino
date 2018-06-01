@@ -30,7 +30,6 @@
 
 #define PAYLOAD_SIZE 16
 
-<<<<<<< HEAD
 //Global constants/variables
 uint32_t MProtocol_id;//tx id,
 uint32_t MProtocol_id_master;
@@ -225,10 +224,6 @@ bool InitOverlays()
 	return true;
 }
 
-
-
-=======
->>>>>>> bda47566da81f26f6cc45ef1aa5f52ba4b31490b
 #ifdef USE_TFT
 	Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CSN_pin, TFT_DC_pin);
 #endif
@@ -245,7 +240,6 @@ bool InitOverlays()
 	Adafruit_MCP3008 adc;
 #endif
 
-<<<<<<< HEAD
 #ifdef USE_RADIO
 	RF24 radio(NRF_CE_pin, NRF_CSN_pin);
 	uint8_t radio_on = 0;
@@ -265,58 +259,10 @@ bool InitOverlays()
 	const char * networkPswd = WIFI_PASSWORD;
 	const char * udpAddress = "192.168.0.24";
 	const int udpPort = 1234;
-=======
-#ifdef USE_WIFI
->>>>>>> bda47566da81f26f6cc45ef1aa5f52ba4b31490b
 
+	boolean connected = false;
+	WiFiUDP udp;
 #endif
-
-<<<<<<< HEAD
-//
-// typedef enum item_type {
-// 	text = 0,
-// 	text_input,
-// 	float_input,
-// 	sub_menu,
-// 	select,
-// 	slider
-// };
-//
-// typedef struct s_item {
-// 	char title[256];
-// 	item_type type;
-// 	char *data;
-// } t_item;
-//
-// typedef struct s_menu {
-// 	char title[256];
-// 	t_item items[20];
-// 	uint16_t item_nb;
-// } t_menu;
-//
-// t_menu menu = {
-// 	"Main Menu",
-// 	{
-// 		{
-// 			"About",
-// 			text,
-// 		},
-// 		{
-// 			"Model menu",
-// 			text
-// 		},
-// 		{
-// 			"Wifi setting",
-// 			text
-// 		},
-// 		{
-// 			"ADC TEST",
-// 			text
-// 		}
-// 	},
-// 	4
-// };
-
 
 // Callback function for when a slider's position has been updated
 // - After a slider position has been changed, update the color box
@@ -366,9 +312,6 @@ bool CbSlidePos(void* pvGui,void* pvElemRef,int16_t nPos)
 
 	return true;
 }
-=======
-uint16_t adc_value[8];
->>>>>>> bda47566da81f26f6cc45ef1aa5f52ba4b31490b
 
 void setup() {
 	Serial.begin(115200);
@@ -414,39 +357,8 @@ void setup() {
 	#ifdef USE_LED
 		leds.begin();
 		leds.show();
-		// delay(10);
-		// leds.setPixelColor(0, leds.Color(255, 0, 0));
-		// leds.show();
-		// delay(500);
-		// leds.setPixelColor(0, leds.Color(255, 255, 0));
-		// leds.show();
-		// delay(500);
-		// leds.setPixelColor(0, leds.Color(0, 0, 255));
-		// leds.show();
-		// delay(500);
-		// leds.setPixelColor(0, leds.Color(255, 255, 255));
-		// leds.show();
-		// delay(500);
-		// leds.setPixelColor(0, leds.Color(0, 0, 0));
-		// leds.show();
-		// delay(500);
 	#endif
 
-	#ifdef USE_TFT
-		tft.begin(40000000); // spi speed 40Mhz
-	#endif
-
-	#ifdef USE_TS
-		ts.begin();
-		ts.setCalc(
-			520,
-			3320,
-			720,
-			3435
-		);
-	#endif
-
-<<<<<<< HEAD
 	#ifdef USE_EXT_ADC
 		adc.begin(ADC_CSN_pin);
 	#endif
@@ -478,10 +390,6 @@ void setup() {
 				Serial.printf("SD Card Size: %lluMB\n", cardSize);
 			}
 		}
-=======
-	#ifdef USE_ADC
-		init_adc();
->>>>>>> bda47566da81f26f6cc45ef1aa5f52ba4b31490b
 	#endif
 
 	#ifdef USE_TFT
@@ -491,88 +399,70 @@ void setup() {
 		tft.setTextSize(FONT_SIZE);
 	#endif
 
-	#ifdef USE_RADIO
-		init_radio();
-	#endif
-
-	#ifdef USE_WIFI
-		init_wifi();
-	#endif
-
-	#ifdef USE_SD
-		init_sd();
-	#endif
-
 	// initBAYANG();
 	delay(5);
 }
 
 
-void update_tft() {
-
-	#ifdef USE_TFT
-		// tft.fillScreen(ILI9341_BLACK);
-		tft.setCursor(0, 0);
-		// tft.println("Hello");
-	#endif
-
-	#if defined(USE_TFT) && defined(PRINT_ADC)
-		tft.print("\nADC inputs: ");
-		#ifdef USE_EXT_ADC
-			tft.println("(EXT)");
-		#else
-			tft.println("(INT)");
-		#endif
-		for (int chan=0;chan,chan<8;chan++) {
-			tft.printf("  [%d] = %04x [%02d%%]\n", chan, Channel_data[chan], map(Channel_data[chan],0x0000, 0xFFFF, 0, 99));
-			// tft.print("  [");
-			// tft.print(chan);
-			// tft.print("] = ");
-			// tft.print(Channel_data[chan]);
-			// tft.println("   ");
-		}
-	#endif
-
-	#if defined(USE_TFT) && defined(USE_TS) && defined(PRINT_TS)
-		tft.println("\nTouchScreen:");
-		if (ts.touched()) {
-			// TS_Point p = ts.getPoint();
-			// tft.println("\nRaw:");
-			// tft.print("x : "); tft.print(p.x); tft.println("  ");
-			// tft.print("y : "); tft.print(p.y); tft.println("  ");
-			// tft.print("z : "); tft.print(p.z); tft.println("  ");
-			TS_Point p = ts.getPointCalc();
-			// tft.println("\nCalibrate:");
-			tft.print("  x: "); tft.print(p.x); tft.println("     ");
-			tft.print("  y: "); tft.print(p.y); tft.println("     ");
-			tft.print("  z: "); tft.print(p.z); tft.println("     ");
-			// tft.fillCircle(p.x, p.y, 2, ILI9341_RED);
-
-			// Serial.print("x = "); Serial.println(p.x);
-			// Serial.print("y = "); Serial.println(p.y);
-		} else {
-			tft.println("  x:       ");
-			tft.println("  y:       ");
-			tft.println("  z:       ");
-		}
-	#endif
-
-
-<<<<<<< HEAD
-	#if defined(USE_TFT) && defined(USE_WIFI) && defined(PRINT_WIFI)
-		tft.printf("\nWifi:\n  SSID: %s\n  IP: ", WIFI_SSID);
-		if (connected)
-			tft.println(WiFi.localIP());
-		else
-			tft.println("disconnected");
-	#endif
-
-	// tft.drawCircle( 30, 240-30, 2, ILI9341_RED);
-
-=======
-	// print_info_sd();
->>>>>>> bda47566da81f26f6cc45ef1aa5f52ba4b31490b
-}
+// void update_tft() {
+//
+// 	#ifdef USE_TFT
+// 		// tft.fillScreen(ILI9341_BLACK);
+// 		tft.setCursor(0, 0);
+// 		// tft.println("Hello");
+// 	#endif
+//
+// 	#if defined(USE_TFT) && defined(PRINT_ADC)
+// 		tft.print("\nADC inputs: ");
+// 		#ifdef USE_EXT_ADC
+// 			tft.println("(EXT)");
+// 		#else
+// 			tft.println("(INT)");
+// 		#endif
+// 		for (int chan=0;chan,chan<8;chan++) {
+// 			tft.printf("  [%d] = %04x [%02d%%]\n", chan, Channel_data[chan], map(Channel_data[chan],0x0000, 0xFFFF, 0, 99));
+// 			// tft.print("  [");
+// 			// tft.print(chan);
+// 			// tft.print("] = ");
+// 			// tft.print(Channel_data[chan]);
+// 			// tft.println("   ");
+// 		}
+// 	#endif
+//
+// 	#if defined(USE_TFT) && defined(USE_TS) && defined(PRINT_TS)
+// 		tft.println("\nTouchScreen:");
+// 		if (ts.touched()) {
+// 			// TS_Point p = ts.getPoint();
+// 			// tft.println("\nRaw:");
+// 			// tft.print("x : "); tft.print(p.x); tft.println("  ");
+// 			// tft.print("y : "); tft.print(p.y); tft.println("  ");
+// 			// tft.print("z : "); tft.print(p.z); tft.println("  ");
+// 			TS_Point p = ts.getPointCalc();
+// 			// tft.println("\nCalibrate:");
+// 			tft.print("  x: "); tft.print(p.x); tft.println("     ");
+// 			tft.print("  y: "); tft.print(p.y); tft.println("     ");
+// 			tft.print("  z: "); tft.print(p.z); tft.println("     ");
+// 			// tft.fillCircle(p.x, p.y, 2, ILI9341_RED);
+//
+// 			// Serial.print("x = "); Serial.println(p.x);
+// 			// Serial.print("y = "); Serial.println(p.y);
+// 		} else {
+// 			tft.println("  x:       ");
+// 			tft.println("  y:       ");
+// 			tft.println("  z:       ");
+// 		}
+// 	#endif
+    //
+	// #if defined(USE_TFT) && defined(USE_WIFI) && defined(PRINT_WIFI)
+	// 	tft.printf("\nWifi:\n  SSID: %s\n  IP: ", WIFI_SSID);
+	// 	if (connected)
+	// 		tft.println(WiFi.localIP());
+	// 	else
+	// 		tft.println("disconnected");
+	// #endif
+	//
+	// // tft.drawCircle( 30, 240-30, 2, ILI9341_RED);
+// }
 
 void loop() {
 
@@ -595,45 +485,16 @@ void loop() {
 		// Serial.println();
 	#endif
 
-	#ifdef USE_LED
-		// leds.setPixelColor(0, leds.Color(
-		// 	Channel_data[0]>>8,
-		// 	0,
-		// 	0
-		// ));
-		// leds.setPixelColor(1, leds.Color(
-		// 	0,
-		// 	Channel_data[1]>>8,
-		// 	0
-		// ));
-		// leds.setPixelColor(2, leds.Color(
-		// 	0,
-		// 	0,
-		// 	Channel_data[2]>>8
-		// ));
-		// leds.setPixelColor(3, leds.Color(
-		// 	Channel_data[3]>>8,
-		// 	Channel_data[3]>>8,
-		// 	0
-		// ));
-		// leds.show();
-	#endif
-
 	#if defined(USE_RADIO) && defined(RADIO_SEND)
 		radio_send();
 	#endif
 
-<<<<<<< HEAD
 	#ifdef USE_WIFI
 		if(connected){
 			udp.beginPacket(udpAddress, udpPort);
 				udp.write((uint8_t *)Channel_data, PAYLOAD_SIZE);
 			udp.endPacket();
 		}
-=======
-	#if defined(USE_WIFI) && defined(WIFI_SEND)
-		wifi_udp_send();
->>>>>>> bda47566da81f26f6cc45ef1aa5f52ba4b31490b
 	#endif
 
 	for (int i=0; i < 8; i++)
@@ -646,7 +507,6 @@ void loop() {
 	// BAYANG_callback();
 	delay(5);
 }
-<<<<<<< HEAD
 
 #ifdef USE_WIFI
 	//wifi event handler
@@ -667,6 +527,4 @@ void loop() {
 			break;
 		}
 	}
-	#endif
-=======
->>>>>>> bda47566da81f26f6cc45ef1aa5f52ba4b31490b
+#endif
