@@ -110,14 +110,26 @@ enum {
 	E_ELEM_PROGRESS5,
 	E_ELEM_PROGRESS6,
 	E_ELEM_PROGRESS7,
+	E_ELEM_PROGRESS8,
+	E_ELEM_PROGRESS9,
+	E_ELEM_PROGRESS10,
+	E_ELEM_PROGRESS11,
+	E_ELEM_PROGRESS12,
+	E_ELEM_PROGRESS13,
+	E_ELEM_PROGRESS14,
+	E_ELEM_PROGRESS15,
 	E_SLIDER_R,
 	E_SLIDER_G,
 	E_SLIDER_B,
+	E_ELEM_BTN_1,
+	E_ELEM_BTN_2,
+	E_ELEM_BTN_3
 };
 
 enum {
 	E_FONT_BTN,
-	E_FONT_TXT
+	E_FONT_TXT,
+	E_FONT_TITLE
 };
 
 enum {
@@ -128,7 +140,7 @@ uint8_t   m_nPosR = 0;
 uint8_t   m_nPosG = 0;
 uint8_t   m_nPosB = 0;
 
-char*	text[8] = {
+char*	text[16] = {
 	"ADC1:",
 	"ADC2:",
 	"ADC3:",
@@ -136,13 +148,21 @@ char*	text[8] = {
 	"ADC5:",
 	"ADC6:",
 	"ADC7:",
-	"ADC8:"
+	"ADC8:",
+	"ADC9:",
+	"ADC10:",
+	"ADC11:",
+	"ADC12:",
+	"ADC13:",
+	"ADC14:",
+	"ADC15:",
+	"ADC16:"
 };
 
 
 // Instantiate the GUI
-#define MAX_PAGE                1
-#define MAX_FONT                2
+#define MAX_PAGE                2
+#define MAX_FONT                3
 
 // Define the maximum number of elements per page
 #define MAX_ELEM_PG_MAIN          50                                        // # Elems total
@@ -152,15 +172,37 @@ gslc_tsGui                  m_gui;
 gslc_tsDriver               m_drv;
 gslc_tsFont                 m_asFont[MAX_FONT];
 gslc_tsPage                 m_asPage[MAX_PAGE];
+
 gslc_tsElem                 m_asPageElem[MAX_ELEM_PG_MAIN_RAM];
 gslc_tsElemRef              m_asPageElemRef[MAX_ELEM_PG_MAIN];
 
-gslc_tsXGauge               m_sXGauge[8];
+gslc_tsElem                 m_asPageElem_ADC[MAX_ELEM_PG_MAIN_RAM];
+gslc_tsElemRef              m_asPageElemRef_ADC[MAX_ELEM_PG_MAIN];
 
-gslc_tsElemRef*             m_pElemProgress[8];
+gslc_tsXGauge               m_sXGauge[16];
+gslc_tsElemRef*             m_pElemProgress[16];
 
 // Define debug message function
 static int16_t DebugOut(char ch) { Serial.write(ch); return 0; }
+
+// Button callbacks
+// - Show example of common callback function
+bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int16_t nY)
+{
+	Serial.println(eTouch);
+	gslc_tsElemRef* pElemRef = (gslc_tsElemRef*)(pvElemRef);
+	gslc_tsElem* pElem = pElemRef->pElem;
+	int16_t nElemId = pElem->nId;
+	if (eTouch == GSLC_TOUCH_DOWN_IN) {
+		if (nElemId == E_ELEM_BTN_1) {
+			gslc_SetPageCur(&m_gui,E_PG_ADC);
+		} else if (nElemId == E_ELEM_BTN_2) {
+			gslc_SetPageCur(&m_gui,E_PG_MAIN);
+		}
+	}
+	return true;
+}
+
 
 // Create page elements
 bool InitOverlays()
@@ -168,29 +210,60 @@ bool InitOverlays()
 	gslc_tsElemRef* pElemRef;
 
 	gslc_PageAdd(&m_gui,E_PG_MAIN,m_asPageElem,MAX_ELEM_PG_MAIN_RAM,m_asPageElemRef,MAX_ELEM_PG_MAIN);
+	gslc_PageAdd(&m_gui,E_PG_ADC,m_asPageElem_ADC,MAX_ELEM_PG_MAIN_RAM,m_asPageElemRef_ADC,MAX_ELEM_PG_MAIN);
 
 	// Background flat color
 	gslc_SetBkgndColor(&m_gui,GSLC_COL_GRAY_DK2);
 
+	// ADC Pages
+
 	// Create background box
-	pElemRef = gslc_ElemCreateBox(&m_gui,E_ELEM_BOX,E_PG_MAIN,(gslc_tsRect){10,10,300,220});
+	pElemRef = gslc_ElemCreateBox(&m_gui,GSLC_ID_AUTO,E_PG_ADC,(gslc_tsRect){0,32,320,215});
+	gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_WHITE,GSLC_COL_BLACK,GSLC_COL_BLACK);
+
+	pElemRef = gslc_ElemCreateBox(&m_gui,GSLC_ID_AUTO,E_PG_ADC,(gslc_tsRect){0,0,320,32});
 	gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_WHITE,GSLC_COL_BLACK,GSLC_COL_BLACK);
 
 
 	// Create progress bar (horizontal)
-	for (int i=0; i < 8; i++) {
-		pElemRef = gslc_ElemCreateTxt(&m_gui,GSLC_ID_AUTO,E_PG_MAIN,(gslc_tsRect){20,20 + i * 15,50,10},
-			text[i],0,E_FONT_TXT);
-		gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_WHITE);
-		pElemRef = gslc_ElemXGaugeCreate(&m_gui,E_ELEM_PROGRESS0 + i,E_PG_MAIN,&m_sXGauge[i],
-			(gslc_tsRect){60, 20 + i * 15, 80, 10},0,100,0,GSLC_COL_YELLOW,false);
-		m_pElemProgress[i] = pElemRef; // Save for quick access
+
+	uint16_t adc_pos_x = 10;
+	uint16_t adc_pos_y = 40;
+	uint16_t adc_space_x = 40;
+	uint16_t adc_space_y = 15;
+
+	uint16_t adc_col_y = 160;
+
+	pElemRef = gslc_ElemCreateTxt(&m_gui,GSLC_ID_AUTO,E_PG_ADC,(gslc_tsRect){0,0,320,32},
+	  (char*)"ADC Menu",0,E_FONT_TITLE);
+	gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_MID_MID);
+	gslc_ElemSetFillEn(&m_gui,pElemRef,false);
+	gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_WHITE);
+
+
+
+	for (int j=0; j < 2; j++) {
+		for (int i=0; i < 8; i++) {
+			pElemRef = gslc_ElemCreateTxt(&m_gui,GSLC_ID_AUTO,E_PG_ADC,(gslc_tsRect){adc_pos_x + adc_col_y * j, adc_pos_y + i * adc_space_y, 50, 10},
+			text[i+j*8],0,E_FONT_TXT);
+			gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_WHITE);
+			pElemRef = gslc_ElemXGaugeCreate(&m_gui,E_ELEM_PROGRESS0 + i + j * 8,E_PG_ADC,&m_sXGauge[i+j*8],
+				(gslc_tsRect){adc_pos_x + adc_space_x + adc_col_y * j, adc_pos_y + i * adc_space_y, 80, 10},0,100,0,GSLC_COL_YELLOW,false);
+				m_pElemProgress[i+j*8] = pElemRef; // Save for quick access
+			}
 	}
 
+	pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BTN_2,E_PG_ADC,
+		(gslc_tsRect){5,5,50,22},(char*)"Back",0,E_FONT_BTN,&CbBtnCommon);
 
-	// Create three sliders (R,G,B) and assign callback function
-	// that is invoked upon change. The common callback will update
-	// the color box.
+	// Main page
+
+	// Create background box
+	pElemRef = gslc_ElemCreateBox(&m_gui,GSLC_ID_AUTO,E_PG_MAIN,(gslc_tsRect){0,32,320,215});
+	gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_WHITE,GSLC_COL_BLACK,GSLC_COL_BLACK);
+
+	pElemRef = gslc_ElemCreateBox(&m_gui,GSLC_ID_AUTO,E_PG_MAIN,(gslc_tsRect){0,0,320,32});
+	gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_WHITE,GSLC_COL_BLACK,GSLC_COL_BLACK);
 
 	// Static text label
 	gslc_ElemCreateTxt_P(&m_gui,106,E_PG_MAIN,20,140,30,20,"Red:",&m_asFont[0],
@@ -221,6 +294,9 @@ bool InitOverlays()
 	pElemRef = gslc_PageFindElemById(&m_gui,E_PG_MAIN,E_SLIDER_B);
 	gslc_ElemXSliderSetStyle(&m_gui,pElemRef,true,GSLC_COL_BLUE_DK4,10,5,GSLC_COL_GRAY_DK2);
 	gslc_ElemXSliderSetPosFunc(&m_gui,pElemRef,&CbSlidePos);
+
+	pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BTN_1,E_PG_MAIN,
+		(gslc_tsRect){5,5,50,22},(char*)"Back",0,E_FONT_BTN,&CbBtnCommon);
 
 	return true;
 }
@@ -349,6 +425,7 @@ void setup() {
 	if (!gslc_Init(&m_gui,&m_drv,m_asPage,MAX_PAGE,m_asFont,MAX_FONT)) { return; }
 	if (!gslc_FontAdd(&m_gui,E_FONT_BTN,GSLC_FONTREF_PTR,NULL,1)) { return; }
 	if (!gslc_FontAdd(&m_gui,E_FONT_TXT,GSLC_FONTREF_PTR,NULL,1)) { return; }
+	if (!gslc_FontAdd(&m_gui,E_FONT_TITLE,GSLC_FONTREF_PTR,NULL,1)) { return; }
 
 	InitOverlays();
 
@@ -401,7 +478,7 @@ void setup() {
 	#endif
 
 	// initBAYANG();
-	delay(5);
+	// delay(5);
 }
 
 
@@ -468,14 +545,14 @@ void setup() {
 void loop() {
 
 	#if  defined(USE_INT_ADC)
-		Channel_data[0] = map(analogRead(36), 0x00, 0xFFF, 0x00, 0xFFFF); // 12bit to 16bit
-		Channel_data[1] = map(analogRead(39), 0x00, 0xFFF, 0x00, 0xFFFF);
-		Channel_data[2] = map(analogRead(34), 0x00, 0xFFF, 0x00, 0xFFFF);
-		Channel_data[3] = map(analogRead(35), 0x00, 0xFFF, 0x00, 0xFFFF);
-		Channel_data[4] = 127;
-		Channel_data[5] = 255;
-		Channel_data[6] = 511;
-		Channel_data[7] = 1023;
+		Channel_data[9] = map(analogRead(36), 0x00, 0xFFF, 0x00, 0xFFFF); // 12bit to 16bit
+		Channel_data[10] = map(analogRead(39), 0x00, 0xFFF, 0x00, 0xFFFF);
+		Channel_data[11] = map(analogRead(34), 0x00, 0xFFF, 0x00, 0xFFFF);
+		Channel_data[12] = map(analogRead(35), 0x00, 0xFFF, 0x00, 0xFFFF);
+		Channel_data[13] = 127;
+		Channel_data[14] = 255;
+		Channel_data[15] = 511;
+		Channel_data[16] = 1023;
 	#endif
 
 	#ifdef USE_EXT_ADC
@@ -498,7 +575,7 @@ void loop() {
 		}
 	#endif
 
-	for (int i=0; i < 8; i++)
+	for (int i=0; i < 16; i++)
 		gslc_ElemXGaugeUpdate(&m_gui,m_pElemProgress[i], map(Channel_data[i], 0x0000, 0xFFFF, 0, 99));
 
 
@@ -506,7 +583,7 @@ void loop() {
 	gslc_Update(&m_gui);
 
 	// BAYANG_callback();
-	delay(5);
+	// delay(5);
 }
 
 #ifdef USE_WIFI

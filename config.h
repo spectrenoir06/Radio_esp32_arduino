@@ -1,12 +1,12 @@
 // #define OLD
 
-#define USE_RADIO
+// #define USE_RADIO
 // #define USE_TFT
 // #define USE_LED
-#define USE_SD
+// #define USE_SD
 // #define USE_TS
 #define USE_ADC
-#define USE_WIFI
+// #define USE_WIFI
 
 #define USE_INT_ADC
 #define USE_EXT_ADC
