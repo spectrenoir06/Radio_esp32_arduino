@@ -98,6 +98,7 @@ uint8_t item_select_old = 0;
 enum {
 	E_PG_MAIN,
 	E_PG_ADC,
+	E_PG_LED,
 };
 
 enum {
@@ -164,12 +165,20 @@ char*	text[16] = {
 
 
 // Instantiate the GUI
-#define MAX_PAGE                2
+#define MAX_PAGE                6
 #define MAX_FONT                3
 
 // Define the maximum number of elements per page
-#define MAX_ELEM_PG_MAIN          50                                        // # Elems total
+#define MAX_ELEM_PG_MAIN          20                                        // # Elems total
 #define MAX_ELEM_PG_MAIN_RAM      MAX_ELEM_PG_MAIN                          // # Elems in RAM
+
+#define MAX_ELEM_PG_ADC          36                                        // # Elems total
+#define MAX_ELEM_PG_ADC_RAM      MAX_ELEM_PG_ADC                           // # Elems in RAM
+
+#define MAX_ELEM_PG_LED          20                                        // # Elems total
+#define MAX_ELEM_PG_LED_RAM      MAX_ELEM_PG_LED                           // # Elems in RAM
+
+
 
 gslc_tsGui                  m_gui;
 gslc_tsDriver               m_drv;
@@ -179,8 +188,11 @@ gslc_tsPage                 m_asPage[MAX_PAGE];
 gslc_tsElem                 m_asMainElem[MAX_ELEM_PG_MAIN_RAM];
 gslc_tsElemRef              m_asMainElemRef[MAX_ELEM_PG_MAIN];
 
-gslc_tsElem                 m_asAdcElem[MAX_ELEM_PG_MAIN_RAM];
-gslc_tsElemRef              m_asAdcElemRef[MAX_ELEM_PG_MAIN];
+gslc_tsElem                 m_asAdcElem[MAX_ELEM_PG_ADC];
+gslc_tsElemRef              m_asAdcElemRef[MAX_ELEM_PG_ADC];
+
+gslc_tsElem                 m_asLedElem[MAX_ELEM_PG_MAIN_RAM];
+gslc_tsElemRef              m_asLedElemRef[MAX_ELEM_PG_MAIN];
 
 gslc_tsXGauge               m_sXGauge[16];
 gslc_tsElemRef*             m_pElemProgress[16];
@@ -204,6 +216,9 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
 			case E_ELEM_BTN_ADC:
 				gslc_SetPageCur(&m_gui,E_PG_ADC);
 				break;
+			case E_ELEM_BTN_LED:
+				gslc_SetPageCur(&m_gui,E_PG_LED);
+				break;
 		}
 	}
 	return true;
@@ -216,7 +231,9 @@ bool InitOverlays()
 	gslc_tsElemRef* pElemRef;
 
 	gslc_PageAdd(&m_gui,E_PG_MAIN,m_asMainElem,MAX_ELEM_PG_MAIN_RAM,m_asMainElemRef,MAX_ELEM_PG_MAIN);
-	gslc_PageAdd(&m_gui,E_PG_ADC,m_asAdcElem,MAX_ELEM_PG_MAIN_RAM,m_asAdcElemRef,MAX_ELEM_PG_MAIN);
+	gslc_PageAdd(&m_gui,E_PG_ADC,m_asAdcElem,MAX_ELEM_PG_ADC_RAM,m_asAdcElemRef,MAX_ELEM_PG_ADC);
+	gslc_PageAdd(&m_gui,E_PG_LED,m_asAdcElem,MAX_ELEM_PG_LED_RAM,m_asAdcElemRef,MAX_ELEM_PG_LED);
+
 
 	// Background flat color
 	gslc_SetBkgndColor(&m_gui,GSLC_COL_GRAY_DK2);
@@ -262,6 +279,8 @@ bool InitOverlays()
 	pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BTN_BACK,E_PG_ADC,
 		(gslc_tsRect){5,5,50,22},(char*)"Back",0,E_FONT_BTN,&CbBtnCommon);
 
+
+
 	// Main page
 
 	// Create background box
@@ -302,35 +321,55 @@ bool InitOverlays()
 		(gslc_tsRect){button_pos_x,button_pos_y,80,22},(char*)"RGB LED",0,E_FONT_BTN,&CbBtnCommon);
 	button_pos_y +=  button_space_y;
 
-	// // Static text label
-	// gslc_ElemCreateTxt_P(&m_gui,106,E_PG_MAIN,20,140,30,20,"Red:",&m_asFont[0],
-	// 	GSLC_COL_GRAY_LT3,GSLC_COL_BLACK,GSLC_COL_BLACK,GSLC_ALIGN_MID_LEFT,false,true);
-	// // Slider
-	// gslc_ElemXSliderCreate_P(&m_gui,E_SLIDER_R,E_PG_MAIN,60,140,80,20,
-	// 	0,255,0,5,false,GSLC_COL_RED,GSLC_COL_BLACK);
-	// pElemRef = gslc_PageFindElemById(&m_gui,E_PG_MAIN,E_SLIDER_R);
-	// gslc_ElemXSliderSetStyle(&m_gui,pElemRef,true,GSLC_COL_RED_DK4,10,5,GSLC_COL_GRAY_DK2);
-	// gslc_ElemXSliderSetPosFunc(&m_gui,pElemRef,&CbSlidePos);
-    //
-	// // Static text label
-	// gslc_ElemCreateTxt_P(&m_gui,107,E_PG_MAIN,20,160,30,20,"Green:",&m_asFont[0],
-	// 	GSLC_COL_GRAY_LT3,GSLC_COL_BLACK,GSLC_COL_BLACK,GSLC_ALIGN_MID_LEFT,false,true);
-	// // Slider
-	// gslc_ElemXSliderCreate_P(&m_gui,E_SLIDER_G,E_PG_MAIN,60,160,80,20,
-	// 	0,255,0,5,false,GSLC_COL_GREEN,GSLC_COL_BLACK);
-	// pElemRef = gslc_PageFindElemById(&m_gui,E_PG_MAIN,E_SLIDER_G);
-	// gslc_ElemXSliderSetStyle(&m_gui,pElemRef,true,GSLC_COL_GREEN_DK4,10,5,GSLC_COL_GRAY_DK2);
-	// gslc_ElemXSliderSetPosFunc(&m_gui,pElemRef,&CbSlidePos);
-    //
-	// // Static text label
-	// gslc_ElemCreateTxt_P(&m_gui,108,E_PG_MAIN,20,180,30,20,"Blue:",&m_asFont[0],
-	// 	GSLC_COL_GRAY_LT3,GSLC_COL_BLACK,GSLC_COL_BLACK,GSLC_ALIGN_MID_LEFT,false,true);
-	// // Slider
-	// gslc_ElemXSliderCreate_P(&m_gui,E_SLIDER_B,E_PG_MAIN,60,180,80,20,
-	// 	0,255,0,5,false,GSLC_COL_BLUE,GSLC_COL_BLACK);
-	// pElemRef = gslc_PageFindElemById(&m_gui,E_PG_MAIN,E_SLIDER_B);
-	// gslc_ElemXSliderSetStyle(&m_gui,pElemRef,true,GSLC_COL_BLUE_DK4,10,5,GSLC_COL_GRAY_DK2);
-	// gslc_ElemXSliderSetPosFunc(&m_gui,pElemRef,&CbSlidePos);
+
+
+	// LED
+
+	// Create background box
+	pElemRef = gslc_ElemCreateBox(&m_gui,GSLC_ID_AUTO,E_PG_LED,(gslc_tsRect){0,32,320,215});
+	gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_WHITE,GSLC_COL_BLACK,GSLC_COL_BLACK);
+
+	pElemRef = gslc_ElemCreateBox(&m_gui,GSLC_ID_AUTO,E_PG_LED,(gslc_tsRect){0,0,320,32});
+	gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_WHITE,GSLC_COL_BLACK,GSLC_COL_BLACK);
+
+	pElemRef = gslc_ElemCreateTxt(&m_gui,GSLC_ID_AUTO,E_PG_LED,(gslc_tsRect){0,0,320,32},
+	  (char*)"RGB LED Menu",0,E_FONT_TITLE);
+	gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_MID_MID);
+	gslc_ElemSetFillEn(&m_gui,pElemRef,false);
+	gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_WHITE);
+
+	// Static text label
+	gslc_ElemCreateTxt_P(&m_gui,106,E_PG_LED,20,140,30,20,"Red:",&m_asFont[0],
+		GSLC_COL_GRAY_LT3,GSLC_COL_BLACK,GSLC_COL_BLACK,GSLC_ALIGN_MID_LEFT,false,true);
+	// Slider
+	gslc_ElemXSliderCreate_P(&m_gui,E_SLIDER_R,E_PG_LED,60,140,80,20,
+		0,255,0,5,false,GSLC_COL_RED,GSLC_COL_BLACK);
+	pElemRef = gslc_PageFindElemById(&m_gui,E_PG_LED,E_SLIDER_R);
+	gslc_ElemXSliderSetStyle(&m_gui,pElemRef,true,GSLC_COL_RED_DK4,10,5,GSLC_COL_GRAY_DK2);
+	gslc_ElemXSliderSetPosFunc(&m_gui,pElemRef,&CbSlidePos);
+
+	// Static text label
+	gslc_ElemCreateTxt_P(&m_gui,107,E_PG_LED,20,160,30,20,"Green:",&m_asFont[0],
+		GSLC_COL_GRAY_LT3,GSLC_COL_BLACK,GSLC_COL_BLACK,GSLC_ALIGN_MID_LEFT,false,true);
+	// Slider
+	gslc_ElemXSliderCreate_P(&m_gui,E_SLIDER_G,E_PG_LED,60,160,80,20,
+		0,255,0,5,false,GSLC_COL_GREEN,GSLC_COL_BLACK);
+	pElemRef = gslc_PageFindElemById(&m_gui,E_PG_LED,E_SLIDER_G);
+	gslc_ElemXSliderSetStyle(&m_gui,pElemRef,true,GSLC_COL_GREEN_DK4,10,5,GSLC_COL_GRAY_DK2);
+	gslc_ElemXSliderSetPosFunc(&m_gui,pElemRef,&CbSlidePos);
+
+	// Static text label
+	gslc_ElemCreateTxt_P(&m_gui,108,E_PG_LED,20,180,30,20,"Blue:",&m_asFont[0],
+		GSLC_COL_GRAY_LT3,GSLC_COL_BLACK,GSLC_COL_BLACK,GSLC_ALIGN_MID_LEFT,false,true);
+	// Slider
+	gslc_ElemXSliderCreate_P(&m_gui,E_SLIDER_B,E_PG_LED,60,180,80,20,
+		0,255,0,5,false,GSLC_COL_BLUE,GSLC_COL_BLACK);
+	pElemRef = gslc_PageFindElemById(&m_gui,E_PG_LED,E_SLIDER_B);
+	gslc_ElemXSliderSetStyle(&m_gui,pElemRef,true,GSLC_COL_BLUE_DK4,10,5,GSLC_COL_GRAY_DK2);
+	gslc_ElemXSliderSetPosFunc(&m_gui,pElemRef,&CbSlidePos);
+
+	pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BTN_BACK,E_PG_LED,
+		(gslc_tsRect){5,5,50,22},(char*)"Back",0,E_FONT_BTN,&CbBtnCommon);
 
 	return true;
 }
