@@ -30,6 +30,7 @@
 
 #define PAYLOAD_SIZE 16
 
+<<<<<<< HEAD
 //Global constants/variables
 uint32_t MProtocol_id;//tx id,
 uint32_t MProtocol_id_master;
@@ -226,6 +227,8 @@ bool InitOverlays()
 
 
 
+=======
+>>>>>>> bda47566da81f26f6cc45ef1aa5f52ba4b31490b
 #ifdef USE_TFT
 	Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CSN_pin, TFT_DC_pin);
 #endif
@@ -242,6 +245,7 @@ bool InitOverlays()
 	Adafruit_MCP3008 adc;
 #endif
 
+<<<<<<< HEAD
 #ifdef USE_RADIO
 	RF24 radio(NRF_CE_pin, NRF_CSN_pin);
 	uint8_t radio_on = 0;
@@ -261,11 +265,13 @@ bool InitOverlays()
 	const char * networkPswd = WIFI_PASSWORD;
 	const char * udpAddress = "192.168.0.24";
 	const int udpPort = 1234;
+=======
+#ifdef USE_WIFI
+>>>>>>> bda47566da81f26f6cc45ef1aa5f52ba4b31490b
 
-	boolean connected = false;
-	WiFiUDP udp;
 #endif
 
+<<<<<<< HEAD
 //
 // typedef enum item_type {
 // 	text = 0,
@@ -360,6 +366,9 @@ bool CbSlidePos(void* pvGui,void* pvElemRef,int16_t nPos)
 
 	return true;
 }
+=======
+uint16_t adc_value[8];
+>>>>>>> bda47566da81f26f6cc45ef1aa5f52ba4b31490b
 
 void setup() {
 	Serial.begin(115200);
@@ -437,6 +446,7 @@ void setup() {
 		);
 	#endif
 
+<<<<<<< HEAD
 	#ifdef USE_EXT_ADC
 		adc.begin(ADC_CSN_pin);
 	#endif
@@ -468,6 +478,10 @@ void setup() {
 				Serial.printf("SD Card Size: %lluMB\n", cardSize);
 			}
 		}
+=======
+	#ifdef USE_ADC
+		init_adc();
+>>>>>>> bda47566da81f26f6cc45ef1aa5f52ba4b31490b
 	#endif
 
 	#ifdef USE_TFT
@@ -478,32 +492,15 @@ void setup() {
 	#endif
 
 	#ifdef USE_RADIO
-		if (radio.begin()) {
-			Serial.println("Radio init OK!");
-
-			radio.setPALevel(RF24_PA_LOW);
-			radio.setChannel(0);
-			radio.setAddressWidth(5);
-			radio.setDataRate(RF24_1MBPS);
-			radio.setCRCLength(RF24_CRC_16);
-			//radio.setAutoAck(false);
-			radio.setRetries(15, 7);
-			radio.setPayloadSize(PAYLOAD_SIZE);
-			radio.openWritingPipe(addresses);
-
-			radio.powerUp();
-			radio.printDetails();
-			radio_on = 1;
-		} else {
-			Serial.println("Radio error init");
-		}
+		init_radio();
 	#endif
 
 	#ifdef USE_WIFI
-		Serial.println("Connecting to WiFi network: " + String(networkName));
-		WiFi.disconnect(true);
-		WiFi.onEvent(WiFiEvent);
-		WiFi.begin(networkName, networkPswd);
+		init_wifi();
+	#endif
+
+	#ifdef USE_SD
+		init_sd();
 	#endif
 
 	// initBAYANG();
@@ -560,83 +557,8 @@ void update_tft() {
 		}
 	#endif
 
-	#if defined(USE_TFT) && defined(USE_RADIO) && defined(PRINT_RADIO)
-		tft.println("\nRadio nRF24L01P");
-		if (radio_on) {
-			tft.print("  PA power: ");
-			switch (radio.getPALevel()) {
-				case RF24_PA_MIN:
-				tft.println("MIN");
-				break;
-				case RF24_PA_LOW:
-				tft.println("LOW");
-				break;
-				case RF24_PA_HIGH:
-				tft.println("HIGH");
-				break;
-				case RF24_PA_MAX:
-				tft.println("MAX");
-				break;
-			}
 
-			tft.print("  Data rate: ");
-			switch (radio.getDataRate()) {
-				case RF24_250KBPS:
-				tft.println("250KBPS");
-				break;
-				case RF24_2MBPS:
-				tft.println("2MBPS");
-				break;
-				case RF24_1MBPS:
-				tft.println("1MBPS");
-				break;
-			}
-
-			tft.print("  Channel: ");
-			tft.println(radio.getChannel());
-
-			tft.print("  CRC Length: ");
-			switch (radio.getCRCLength()) {
-				case RF24_CRC_DISABLED:
-				tft.println("Disable");
-				break;
-				case RF24_CRC_16:
-				tft.println("16 bits");
-				break;
-				case RF24_CRC_8:
-				tft.println("8 bits");
-				break;
-			}
-		} else {
-			tft.println("  RADIO ERROR");
-		}
-	#endif
-
-	#if defined(USE_TFT) && defined(USE_SD) && defined(PRINT_SD)
-		tft.println("\nSD card:");
-		if (!cardState) {
-			tft.println("  Error loading SD");
-		} else {
-			if(cardType == CARD_NONE){
-				tft.println("  No card attached");
-			} else {
-				tft.print("  Type: ");
-				if(cardType == CARD_MMC){
-					tft.println("MMC");
-				} else if(cardType == CARD_SD){
-					tft.println("SDSC");
-				} else if(cardType == CARD_SDHC){
-					tft.println("SDHC");
-				} else {
-					tft.println("UNKNOWN");
-				}
-				tft.print("  Size:");
-				tft.print((uint32_t)cardSize);
-				tft.println("MB");
-			}
-		}
-	#endif
-
+<<<<<<< HEAD
 	#if defined(USE_TFT) && defined(USE_WIFI) && defined(PRINT_WIFI)
 		tft.printf("\nWifi:\n  SSID: %s\n  IP: ", WIFI_SSID);
 		if (connected)
@@ -647,6 +569,9 @@ void update_tft() {
 
 	// tft.drawCircle( 30, 240-30, 2, ILI9341_RED);
 
+=======
+	// print_info_sd();
+>>>>>>> bda47566da81f26f6cc45ef1aa5f52ba4b31490b
 }
 
 void loop() {
@@ -694,19 +619,21 @@ void loop() {
 		// leds.show();
 	#endif
 
-	#ifdef USE_RADIO
-		// if (radio.write(adc_value, PAYLOAD_SIZE))
-		// 	Serial.print("Radio send success\n");
-		// else
-		// 	Serial.print("Radio send failed\n");
+	#if defined(USE_RADIO) && defined(RADIO_SEND)
+		radio_send();
 	#endif
 
+<<<<<<< HEAD
 	#ifdef USE_WIFI
 		if(connected){
 			udp.beginPacket(udpAddress, udpPort);
 				udp.write((uint8_t *)Channel_data, PAYLOAD_SIZE);
 			udp.endPacket();
 		}
+=======
+	#if defined(USE_WIFI) && defined(WIFI_SEND)
+		wifi_udp_send();
+>>>>>>> bda47566da81f26f6cc45ef1aa5f52ba4b31490b
 	#endif
 
 	for (int i=0; i < 8; i++)
@@ -719,6 +646,7 @@ void loop() {
 	// BAYANG_callback();
 	delay(5);
 }
+<<<<<<< HEAD
 
 #ifdef USE_WIFI
 	//wifi event handler
@@ -740,3 +668,5 @@ void loop() {
 		}
 	}
 	#endif
+=======
+>>>>>>> bda47566da81f26f6cc45ef1aa5f52ba4b31490b

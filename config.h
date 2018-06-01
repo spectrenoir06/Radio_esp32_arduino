@@ -8,13 +8,8 @@
 #define USE_ADC
 #define USE_WIFI
 
-#ifdef USE_ADC
-	#ifdef OLD
-		#define USE_INT_ADC
-	#else
-		#define USE_EXT_ADC
-	#endif
-#endif
+#define USE_INT_ADC
+#define USE_EXT_ADC
 
 #define PRINT_ADC
 #define PRINT_TS
