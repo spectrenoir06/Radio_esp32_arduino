@@ -99,6 +99,7 @@ enum {
 	E_PG_MAIN,
 	E_PG_ADC,
 	E_PG_LED,
+	E_PG_WIFI,
 };
 
 enum {
@@ -123,11 +124,28 @@ enum {
 	E_SLIDER_G,
 	E_SLIDER_B,
 	E_ELEM_BTN_ADC,
-	E_ELEM_BTN_NRF24,
 	E_ELEM_BTN_TS,
 	E_ELEM_BTN_LED,
 	E_ELEM_BTN_WIFI,
+	E_ELEM_BTN_BLE,
+	E_ELEM_BTN_NRF24,
+	E_ELEM_BTN_CYRF69,
+	E_ELEM_BTN_CC2500,
+	E_ELEM_BTN_A7105,
 	E_ELEM_BTN_BACK,
+	E_ELEM_COLOR,
+	E_ELEM_WIFI_SSID_LABEL,
+	E_ELEM_WIFI_IP_LABEL,
+	E_ELEM_WIFI_MAC_LABEL,
+	E_ELEM_WIFI_SUBNET_LABEL,
+	E_ELEM_WIFI_GATEWAY_LABEL,
+	E_ELEM_WIFI_DNS_LABEL,
+	E_ELEM_WIFI_SSID_VALUE,
+	E_ELEM_WIFI_IP_VALUE,
+	E_ELEM_WIFI_MAC_VALUE,
+	E_ELEM_WIFI_SUBNET_VALUE,
+	E_ELEM_WIFI_GATEWAY_VALUE,
+	E_ELEM_WIFI_DNS_VALUE,
 };
 
 enum {
@@ -178,6 +196,8 @@ char*	text[16] = {
 #define MAX_ELEM_PG_LED          20                                        // # Elems total
 #define MAX_ELEM_PG_LED_RAM      MAX_ELEM_PG_LED                           // # Elems in RAM
 
+#define MAX_ELEM_PG_WIFI          20                                        // # Elems total
+#define MAX_ELEM_PG_WIFI_RAM      MAX_ELEM_PG_WIFI                           // # Elems in RAM
 
 
 gslc_tsGui                  m_gui;
@@ -191,8 +211,11 @@ gslc_tsElemRef              m_asMainElemRef[MAX_ELEM_PG_MAIN];
 gslc_tsElem                 m_asAdcElem[MAX_ELEM_PG_ADC];
 gslc_tsElemRef              m_asAdcElemRef[MAX_ELEM_PG_ADC];
 
-gslc_tsElem                 m_asLedElem[MAX_ELEM_PG_MAIN_RAM];
-gslc_tsElemRef              m_asLedElemRef[MAX_ELEM_PG_MAIN];
+gslc_tsElem                 m_asLedElem[MAX_ELEM_PG_LED_RAM];
+gslc_tsElemRef              m_asLedElemRef[MAX_ELEM_PG_LED];
+
+gslc_tsElem                 m_asWifiElem[MAX_ELEM_PG_WIFI_RAM];
+gslc_tsElemRef              m_asWifiElemRef[MAX_ELEM_PG_WIFI];
 
 gslc_tsXGauge               m_sXGauge[16];
 gslc_tsElemRef*             m_pElemProgress[16];
@@ -219,6 +242,9 @@ bool CbBtnCommon(void* pvGui,void *pvElemRef,gslc_teTouch eTouch,int16_t nX,int1
 			case E_ELEM_BTN_LED:
 				gslc_SetPageCur(&m_gui,E_PG_LED);
 				break;
+			case E_ELEM_BTN_WIFI:
+				gslc_SetPageCur(&m_gui,E_PG_WIFI);
+				break;
 		}
 	}
 	return true;
@@ -232,8 +258,8 @@ bool InitOverlays()
 
 	gslc_PageAdd(&m_gui,E_PG_MAIN,m_asMainElem,MAX_ELEM_PG_MAIN_RAM,m_asMainElemRef,MAX_ELEM_PG_MAIN);
 	gslc_PageAdd(&m_gui,E_PG_ADC,m_asAdcElem,MAX_ELEM_PG_ADC_RAM,m_asAdcElemRef,MAX_ELEM_PG_ADC);
-	gslc_PageAdd(&m_gui,E_PG_LED,m_asAdcElem,MAX_ELEM_PG_LED_RAM,m_asAdcElemRef,MAX_ELEM_PG_LED);
-
+	gslc_PageAdd(&m_gui,E_PG_LED,m_asLedElem,MAX_ELEM_PG_LED_RAM,m_asLedElemRef,MAX_ELEM_PG_LED);
+	gslc_PageAdd(&m_gui,E_PG_WIFI,m_asWifiElem,MAX_ELEM_PG_WIFI_RAM,m_asWifiElemRef,MAX_ELEM_PG_WIFI);
 
 	// Background flat color
 	gslc_SetBkgndColor(&m_gui,GSLC_COL_GRAY_DK2);
@@ -262,8 +288,6 @@ bool InitOverlays()
 	gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_MID_MID);
 	gslc_ElemSetFillEn(&m_gui,pElemRef,false);
 	gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_WHITE);
-
-
 
 	for (int j=0; j < 2; j++) {
 		for (int i=0; i < 8; i++) {
@@ -297,9 +321,16 @@ bool InitOverlays()
 	gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_WHITE);
 
 	uint16_t button_pos_x = 10;
-	uint16_t button_pos_y = 40;
+	uint16_t button_pos_y = 35;
 	uint16_t button_space_x = 40;
-	uint16_t button_space_y = 30;
+	uint16_t button_space_y = 28;
+
+	pElemRef = gslc_ElemCreateTxt(&m_gui,GSLC_ID_AUTO,E_PG_MAIN,(gslc_tsRect){button_pos_x,button_pos_y,80,22},
+		(char*)"Test",0,E_FONT_TITLE);
+	gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_MID_MID);
+	gslc_ElemSetFillEn(&m_gui,pElemRef,false);
+	gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_WHITE);
+	button_pos_y +=  button_space_y;
 
 	pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BTN_ADC,E_PG_MAIN,
 		(gslc_tsRect){button_pos_x,button_pos_y,80,22},(char*)"ADC menu",0,E_FONT_BTN,&CbBtnCommon);
@@ -309,17 +340,47 @@ bool InitOverlays()
 		(gslc_tsRect){button_pos_x,button_pos_y,80,22},(char*)"Touchscreen",0,E_FONT_BTN,&CbBtnCommon);
 	button_pos_y +=  button_space_y;
 
+	pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BTN_LED,E_PG_MAIN,
+		(gslc_tsRect){button_pos_x,button_pos_y,80,22},(char*)"RGB LED",0,E_FONT_BTN,&CbBtnCommon);
+	button_pos_y +=  button_space_y;
+
+
+
+	button_pos_x = 110;
+	button_pos_y = 35;
+	button_space_x = 40;
+	button_space_y = 28;
+
+	pElemRef = gslc_ElemCreateTxt(&m_gui,GSLC_ID_AUTO,E_PG_MAIN,(gslc_tsRect){button_pos_x,button_pos_y,80,22},
+		(char*)"Radio Setting",0,E_FONT_TITLE);
+	gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_MID_MID);
+	gslc_ElemSetFillEn(&m_gui,pElemRef,false);
+	gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_WHITE);
+	button_pos_y +=  button_space_y;
+
 	pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BTN_WIFI,E_PG_MAIN,
 		(gslc_tsRect){button_pos_x,button_pos_y,80,22},(char*)"Wifi",0,E_FONT_BTN,&CbBtnCommon);
+	button_pos_y +=  button_space_y;
+
+	pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BTN_BLE,E_PG_MAIN,
+		(gslc_tsRect){button_pos_x,button_pos_y,80,22},(char*)"Bluetooth",0,E_FONT_BTN,&CbBtnCommon);
 	button_pos_y +=  button_space_y;
 
 	pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BTN_NRF24,E_PG_MAIN,
 		(gslc_tsRect){button_pos_x,button_pos_y,80,22},(char*)"nRF24L01+",0,E_FONT_BTN,&CbBtnCommon);
 	button_pos_y +=  button_space_y;
 
-	pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BTN_LED,E_PG_MAIN,
-		(gslc_tsRect){button_pos_x,button_pos_y,80,22},(char*)"RGB LED",0,E_FONT_BTN,&CbBtnCommon);
+	pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BTN_CYRF69,E_PG_MAIN,
+		(gslc_tsRect){button_pos_x,button_pos_y,80,22},(char*)"CYRF6936",0,E_FONT_BTN,&CbBtnCommon);
 	button_pos_y +=  button_space_y;
+
+	pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BTN_A7105,E_PG_MAIN,
+		(gslc_tsRect){button_pos_x,button_pos_y,80,22},(char*)"A7105",0,E_FONT_BTN,&CbBtnCommon);
+	button_pos_y +=  button_space_y;
+
+	pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BTN_CC2500,E_PG_MAIN,
+		(gslc_tsRect){button_pos_x,button_pos_y,80,22},(char*)"CC2500",0,E_FONT_BTN,&CbBtnCommon);
+
 
 
 
@@ -333,42 +394,132 @@ bool InitOverlays()
 	gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_WHITE,GSLC_COL_BLACK,GSLC_COL_BLACK);
 
 	pElemRef = gslc_ElemCreateTxt(&m_gui,GSLC_ID_AUTO,E_PG_LED,(gslc_tsRect){0,0,320,32},
-	  (char*)"RGB LED Menu",0,E_FONT_TITLE);
+		(char*)"RGB LED Menu",0,E_FONT_TITLE);
 	gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_MID_MID);
 	gslc_ElemSetFillEn(&m_gui,pElemRef,false);
 	gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_WHITE);
 
+
+	uint16_t slider_pos_x = 10;
+	uint16_t slider_pos_y = 35;
+	uint16_t slider_space_x = 40;
+	uint16_t slider_space_y = 28;
+
+
 	// Static text label
-	gslc_ElemCreateTxt_P(&m_gui,106,E_PG_LED,20,140,30,20,"Red:",&m_asFont[0],
+	gslc_ElemCreateTxt_P(&m_gui,106,E_PG_LED,slider_pos_x,slider_pos_y,30,20,"Red:",&m_asFont[0],
 		GSLC_COL_GRAY_LT3,GSLC_COL_BLACK,GSLC_COL_BLACK,GSLC_ALIGN_MID_LEFT,false,true);
 	// Slider
-	gslc_ElemXSliderCreate_P(&m_gui,E_SLIDER_R,E_PG_LED,60,140,80,20,
+	gslc_ElemXSliderCreate_P(&m_gui,E_SLIDER_R,E_PG_LED,slider_pos_x + slider_space_x,slider_pos_y,150,20,
 		0,255,0,5,false,GSLC_COL_RED,GSLC_COL_BLACK);
 	pElemRef = gslc_PageFindElemById(&m_gui,E_PG_LED,E_SLIDER_R);
 	gslc_ElemXSliderSetStyle(&m_gui,pElemRef,true,GSLC_COL_RED_DK4,10,5,GSLC_COL_GRAY_DK2);
 	gslc_ElemXSliderSetPosFunc(&m_gui,pElemRef,&CbSlidePos);
+	slider_pos_y +=  slider_space_y;
 
 	// Static text label
-	gslc_ElemCreateTxt_P(&m_gui,107,E_PG_LED,20,160,30,20,"Green:",&m_asFont[0],
+	gslc_ElemCreateTxt_P(&m_gui,107,E_PG_LED,slider_pos_x,slider_pos_y,30,20,"Green:",&m_asFont[0],
 		GSLC_COL_GRAY_LT3,GSLC_COL_BLACK,GSLC_COL_BLACK,GSLC_ALIGN_MID_LEFT,false,true);
 	// Slider
-	gslc_ElemXSliderCreate_P(&m_gui,E_SLIDER_G,E_PG_LED,60,160,80,20,
+	gslc_ElemXSliderCreate_P(&m_gui,E_SLIDER_G,E_PG_LED,slider_pos_x + slider_space_x,slider_pos_y,150,20,
 		0,255,0,5,false,GSLC_COL_GREEN,GSLC_COL_BLACK);
 	pElemRef = gslc_PageFindElemById(&m_gui,E_PG_LED,E_SLIDER_G);
 	gslc_ElemXSliderSetStyle(&m_gui,pElemRef,true,GSLC_COL_GREEN_DK4,10,5,GSLC_COL_GRAY_DK2);
 	gslc_ElemXSliderSetPosFunc(&m_gui,pElemRef,&CbSlidePos);
+	slider_pos_y +=  slider_space_y;
 
 	// Static text label
-	gslc_ElemCreateTxt_P(&m_gui,108,E_PG_LED,20,180,30,20,"Blue:",&m_asFont[0],
+	gslc_ElemCreateTxt_P(&m_gui,108,E_PG_LED,slider_pos_x,slider_pos_y,30,20,"Blue:",&m_asFont[0],
 		GSLC_COL_GRAY_LT3,GSLC_COL_BLACK,GSLC_COL_BLACK,GSLC_ALIGN_MID_LEFT,false,true);
 	// Slider
-	gslc_ElemXSliderCreate_P(&m_gui,E_SLIDER_B,E_PG_LED,60,180,80,20,
+	gslc_ElemXSliderCreate_P(&m_gui,E_SLIDER_B,E_PG_LED,slider_pos_x + slider_space_x,slider_pos_y,150,20,
 		0,255,0,5,false,GSLC_COL_BLUE,GSLC_COL_BLACK);
 	pElemRef = gslc_PageFindElemById(&m_gui,E_PG_LED,E_SLIDER_B);
 	gslc_ElemXSliderSetStyle(&m_gui,pElemRef,true,GSLC_COL_BLUE_DK4,10,5,GSLC_COL_GRAY_DK2);
 	gslc_ElemXSliderSetPosFunc(&m_gui,pElemRef,&CbSlidePos);
+	slider_pos_y +=  slider_space_y;
+
+	// Create color box
+	pElemRef = gslc_ElemCreateBox(&m_gui,E_ELEM_COLOR,E_PG_LED,(gslc_tsRect){210,40, 100,100});
+	gslc_tsColor colRGB = (gslc_tsColor){m_nPosR,m_nPosG,m_nPosB};
+	gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_WHITE,colRGB,GSLC_COL_WHITE);
 
 	pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BTN_BACK,E_PG_LED,
+		(gslc_tsRect){5,5,50,22},(char*)"Back",0,E_FONT_BTN,&CbBtnCommon);
+
+	// Wifi
+
+	// Create background box
+	pElemRef = gslc_ElemCreateBox(&m_gui,GSLC_ID_AUTO,E_PG_WIFI,(gslc_tsRect){0,32,320,215});
+	gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_WHITE,GSLC_COL_BLACK,GSLC_COL_BLACK);
+
+	pElemRef = gslc_ElemCreateBox(&m_gui,GSLC_ID_AUTO,E_PG_WIFI,(gslc_tsRect){0,0,320,32});
+	gslc_ElemSetCol(&m_gui,pElemRef,GSLC_COL_WHITE,GSLC_COL_BLACK,GSLC_COL_BLACK);
+
+	pElemRef = gslc_ElemCreateTxt(&m_gui,GSLC_ID_AUTO,E_PG_WIFI,(gslc_tsRect){0,0,320,32},
+		(char*)"Wifi Menu",0,E_FONT_TITLE);
+	gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_MID_MID);
+	gslc_ElemSetFillEn(&m_gui,pElemRef,false);
+	gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_WHITE);
+
+	uint16_t wifi_pos_x = 10;
+	uint16_t wifi_pos_y = 35;
+	uint16_t wifi_space_x = 80;
+	uint16_t wifi_space_y = 28;
+
+
+	gslc_ElemCreateTxt_P(&m_gui,E_ELEM_WIFI_SSID_LABEL,E_PG_WIFI,wifi_pos_x,wifi_pos_y,30,20,"SSID:",&m_asFont[0],
+		GSLC_COL_GRAY_LT3,GSLC_COL_BLACK,GSLC_COL_BLACK,GSLC_ALIGN_MID_LEFT,false,true);
+	static char wifi_ssid[40] = WIFI_SSID;
+	pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_WIFI_SSID_VALUE,E_PG_WIFI,(gslc_tsRect){wifi_pos_x + wifi_space_x, wifi_pos_y,30,20},
+		wifi_ssid,sizeof(wifi_ssid),E_FONT_TXT);
+	gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_GRAY_LT3);
+	wifi_pos_y += wifi_space_y;
+
+	gslc_ElemCreateTxt_P(&m_gui,E_ELEM_WIFI_IP_LABEL,E_PG_WIFI,wifi_pos_x,wifi_pos_y,30,20,"IP address:",&m_asFont[0],
+		GSLC_COL_GRAY_LT3,GSLC_COL_BLACK,GSLC_COL_BLACK,GSLC_ALIGN_MID_LEFT,false,true);
+	static char wifi_ip[20] = "";
+	pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_WIFI_IP_VALUE,E_PG_WIFI,(gslc_tsRect){wifi_pos_x + wifi_space_x, wifi_pos_y,30,20},
+		wifi_ip,sizeof(wifi_ip),E_FONT_TXT);
+	gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_GRAY_LT3);
+	wifi_pos_y += wifi_space_y;
+
+	gslc_ElemCreateTxt_P(&m_gui,E_ELEM_WIFI_MAC_LABEL,E_PG_WIFI,wifi_pos_x,wifi_pos_y,30,20,"Mac address:",&m_asFont[0],
+		GSLC_COL_GRAY_LT3,GSLC_COL_BLACK,GSLC_COL_BLACK,GSLC_ALIGN_MID_LEFT,false,true);
+	static char wifi_mac[20] = "";
+	WiFi.macAddress().toCharArray(wifi_mac, 20);
+	pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_WIFI_MAC_VALUE,E_PG_WIFI,(gslc_tsRect){wifi_pos_x + wifi_space_x, wifi_pos_y,30,20},
+		wifi_mac,sizeof(wifi_mac),E_FONT_TXT);
+	gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_GRAY_LT3);
+	wifi_pos_y += wifi_space_y;
+
+	gslc_ElemCreateTxt_P(&m_gui,E_ELEM_WIFI_SUBNET_LABEL,E_PG_WIFI,wifi_pos_x,wifi_pos_y,30,20,"Subnet Mask:",&m_asFont[0],
+		GSLC_COL_GRAY_LT3,GSLC_COL_BLACK,GSLC_COL_BLACK,GSLC_ALIGN_MID_LEFT,false,true);
+	static char wifi_subnet[20] = "";
+	WiFi.subnetMask().toString().toCharArray(wifi_subnet, 20);
+	pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_WIFI_SUBNET_VALUE,E_PG_WIFI,(gslc_tsRect){wifi_pos_x + wifi_space_x, wifi_pos_y,30,20},
+		wifi_subnet,sizeof(wifi_subnet),E_FONT_TXT);
+	gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_GRAY_LT3);
+	wifi_pos_y += wifi_space_y;
+
+	gslc_ElemCreateTxt_P(&m_gui,E_ELEM_WIFI_GATEWAY_LABEL,E_PG_WIFI,wifi_pos_x,wifi_pos_y,30,20,"Gateway IP:",&m_asFont[0],
+		GSLC_COL_GRAY_LT3,GSLC_COL_BLACK,GSLC_COL_BLACK,GSLC_ALIGN_MID_LEFT,false,true);
+	static char wifi_gateway[20] = "";
+	WiFi.gatewayIP().toString().toCharArray(wifi_gateway, 20);
+	pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_WIFI_GATEWAY_VALUE,E_PG_WIFI,(gslc_tsRect){wifi_pos_x + wifi_space_x, wifi_pos_y,30,20},
+		wifi_gateway,sizeof(wifi_gateway),E_FONT_TXT);
+	gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_GRAY_LT3);
+	wifi_pos_y += wifi_space_y;
+
+	gslc_ElemCreateTxt_P(&m_gui,E_ELEM_WIFI_DNS_LABEL,E_PG_WIFI,wifi_pos_x,wifi_pos_y,30,20,"DNS:",&m_asFont[0],
+		GSLC_COL_GRAY_LT3,GSLC_COL_BLACK,GSLC_COL_BLACK,GSLC_ALIGN_MID_LEFT,false,true);
+	static char wifi_dns[20] = "";
+	pElemRef = gslc_ElemCreateTxt(&m_gui,E_ELEM_WIFI_DNS_VALUE,E_PG_WIFI,(gslc_tsRect){wifi_pos_x + wifi_space_x, wifi_pos_y,30,20},
+		wifi_dns,sizeof(wifi_dns),E_FONT_TXT);
+	gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_GRAY_LT3);
+	wifi_pos_y += wifi_space_y;
+
+	pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BTN_BACK,E_PG_WIFI,
 		(gslc_tsRect){5,5,50,22},(char*)"Back",0,E_FONT_BTN,&CbBtnCommon);
 
 	return true;
@@ -383,7 +534,7 @@ bool InitOverlays()
 #endif
 
 #ifdef USE_LED
-	Adafruit_NeoPixel leds = Adafruit_NeoPixel(4, NEOPIXEL_pin, NEO_GRB + NEO_KHZ800);
+	Adafruit_NeoPixel leds = Adafruit_NeoPixel(1, NEOPIXEL_pin, NEO_GRB + NEO_KHZ800);
 #endif
 
 #ifdef USE_EXT_ADC
@@ -457,8 +608,8 @@ bool CbSlidePos(void* pvGui,void* pvElemRef,int16_t nPos)
 	#endif
 
 	// Update the color box
-	// gslc_tsElemRef* pElemColor = gslc_PageFindElemById(pGui,E_PG_MAIN,E_ELEM_COLOR);
-	// gslc_ElemSetCol(pGui,pElemColor,GSLC_COL_WHITE,colRGB,GSLC_COL_WHITE);
+	gslc_tsElemRef* pElemColor = gslc_PageFindElemById(pGui,E_PG_LED,E_ELEM_COLOR);
+	gslc_ElemSetCol(pGui,pElemColor,GSLC_COL_WHITE,colRGB,GSLC_COL_WHITE);
 
 	return true;
 }
@@ -495,18 +646,13 @@ void setup() {
 	CYRF_CSN_on;
 	CYRF_RST_HI; //reset cyrf
 
-	if (!gslc_Init(&m_gui,&m_drv,m_asPage,MAX_PAGE,m_asFont,MAX_FONT)) { return; }
-	if (!gslc_FontAdd(&m_gui,E_FONT_BTN,GSLC_FONTREF_PTR,NULL,1)) { return; }
-	if (!gslc_FontAdd(&m_gui,E_FONT_TXT,GSLC_FONTREF_PTR,NULL,1)) { return; }
-	if (!gslc_FontAdd(&m_gui,E_FONT_TITLE,GSLC_FONTREF_PTR,NULL,1)) { return; }
-
-	InitOverlays();
-
-	// Start up display on main page
-	gslc_SetPageCur(&m_gui,E_PG_MAIN);
 
 	#ifdef USE_LED
 		leds.begin();
+		delay(2);
+		leds.setPixelColor(0, leds.Color(0,0,0));
+		leds.show();
+		delay(2);
 		leds.show();
 	#endif
 
@@ -543,12 +689,29 @@ void setup() {
 		}
 	#endif
 
-	#ifdef USE_TFT
-		tft.setRotation(1);
-		tft.fillScreen(ILI9341_BLACK);
-		tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
-		tft.setTextSize(FONT_SIZE);
+	// #ifdef USE_TFT
+	// 	tft.setRotation(1);
+	// 	tft.fillScreen(ILI9341_BLACK);
+	// 	tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
+	// 	tft.setTextSize(FONT_SIZE);
+	// #endif
+
+	#ifdef USE_WIFI
+		Serial.println("Connecting to WiFi network: " + String(networkName));
+		WiFi.disconnect(true);
+		WiFi.onEvent(WiFiEvent);
+		WiFi.begin(networkName, networkPswd);
 	#endif
+
+	if (!gslc_Init(&m_gui,&m_drv,m_asPage,MAX_PAGE,m_asFont,MAX_FONT)) { return; }
+	if (!gslc_FontAdd(&m_gui,E_FONT_BTN,GSLC_FONTREF_PTR,NULL,1)) { return; }
+	if (!gslc_FontAdd(&m_gui,E_FONT_TXT,GSLC_FONTREF_PTR,NULL,1)) { return; }
+	if (!gslc_FontAdd(&m_gui,E_FONT_TITLE,GSLC_FONTREF_PTR,NULL,1)) { return; }
+
+	InitOverlays();
+
+	// Start up display on main page
+	gslc_SetPageCur(&m_gui,E_PG_MAIN);
 
 	// initBAYANG();
 	// delay(5);
@@ -637,15 +800,15 @@ void loop() {
 	#endif
 
 	#if defined(USE_RADIO) && defined(RADIO_SEND)
-		radio_send();
+		// radio_send();
 	#endif
 
 	#ifdef USE_WIFI
-		if(connected){
-			udp.beginPacket(udpAddress, udpPort);
-				udp.write((uint8_t *)Channel_data, PAYLOAD_SIZE);
-			udp.endPacket();
-		}
+		// if(connected){
+		// 	udp.beginPacket(udpAddress, udpPort);
+		// 		udp.write((uint8_t *)Channel_data, PAYLOAD_SIZE);
+		// 	udp.endPacket();
+		// }
 	#endif
 
 	for (int i=0; i < 16; i++)
@@ -662,11 +825,32 @@ void loop() {
 #ifdef USE_WIFI
 	//wifi event handler
 	void WiFiEvent(WiFiEvent_t event){
+		gslc_tsElemRef*  pElemCnt;
 		switch(event) {
 			case SYSTEM_EVENT_STA_GOT_IP:
 				//When connected set
 				Serial.print("WiFi connected! IP address: ");
 				Serial.println(WiFi.localIP());
+
+				char tmp[25];
+
+				WiFi.localIP().toString().toCharArray(tmp, 20);
+				pElemCnt = gslc_PageFindElemById(&m_gui,E_PG_WIFI,E_ELEM_WIFI_IP_VALUE);
+				gslc_ElemSetTxtStr(&m_gui,pElemCnt,tmp);
+
+				WiFi.subnetMask().toString().toCharArray(tmp, 20);
+				pElemCnt = gslc_PageFindElemById(&m_gui,E_PG_WIFI,E_ELEM_WIFI_SUBNET_VALUE);
+				gslc_ElemSetTxtStr(&m_gui,pElemCnt,tmp);
+
+				WiFi.gatewayIP().toString().toCharArray(tmp, 20);
+				pElemCnt = gslc_PageFindElemById(&m_gui,E_PG_WIFI,E_ELEM_WIFI_GATEWAY_VALUE);
+				gslc_ElemSetTxtStr(&m_gui,pElemCnt,tmp);
+
+				WiFi.dnsIP().toString().toCharArray(tmp, 20);
+				pElemCnt = gslc_PageFindElemById(&m_gui,E_PG_WIFI,E_ELEM_WIFI_DNS_VALUE);
+				gslc_ElemSetTxtStr(&m_gui,pElemCnt,tmp);
+
+
 				//initializes the UDP state
 				//This initializes the transfer buffer
 				udp.begin(WiFi.localIP(),udpPort);
