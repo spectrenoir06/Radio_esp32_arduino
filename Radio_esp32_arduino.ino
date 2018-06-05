@@ -132,6 +132,11 @@ enum {
 	E_ELEM_BTN_CYRF69,
 	E_ELEM_BTN_CC2500,
 	E_ELEM_BTN_A7105,
+	E_ELEM_BTN_BAYANG,
+	E_ELEM_BTN_NES,
+	E_ELEM_BTN_GB,
+	E_ELEM_BTN_DOOM,
+	E_ELEM_BTN_PACMAN,
 	E_ELEM_BTN_BACK,
 	E_ELEM_COLOR,
 	E_ELEM_WIFI_SSID_LABEL,
@@ -284,7 +289,7 @@ bool InitOverlays()
 	uint16_t adc_col_y = 160;
 
 	pElemRef = gslc_ElemCreateTxt(&m_gui,GSLC_ID_AUTO,E_PG_ADC,(gslc_tsRect){0,0,320,32},
-	  (char*)"ADC Menu",0,E_FONT_TITLE);
+		(char*)"ADC Menu",0,E_FONT_TITLE);
 	gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_MID_MID);
 	gslc_ElemSetFillEn(&m_gui,pElemRef,false);
 	gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_WHITE);
@@ -302,8 +307,6 @@ bool InitOverlays()
 
 	pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BTN_BACK,E_PG_ADC,
 		(gslc_tsRect){5,5,50,22},(char*)"Back",0,E_FONT_BTN,&CbBtnCommon);
-
-
 
 	// Main page
 
@@ -326,7 +329,7 @@ bool InitOverlays()
 	uint16_t button_space_y = 28;
 
 	pElemRef = gslc_ElemCreateTxt(&m_gui,GSLC_ID_AUTO,E_PG_MAIN,(gslc_tsRect){button_pos_x,button_pos_y,80,22},
-		(char*)"Test",0,E_FONT_TITLE);
+		(char*)"Hardware info",0,E_FONT_TITLE);
 	gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_MID_MID);
 	gslc_ElemSetFillEn(&m_gui,pElemRef,false);
 	gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_WHITE);
@@ -343,7 +346,6 @@ bool InitOverlays()
 	pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BTN_LED,E_PG_MAIN,
 		(gslc_tsRect){button_pos_x,button_pos_y,80,22},(char*)"RGB LED",0,E_FONT_BTN,&CbBtnCommon);
 	button_pos_y +=  button_space_y;
-
 
 
 	button_pos_x = 110;
@@ -381,8 +383,37 @@ bool InitOverlays()
 	pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BTN_CC2500,E_PG_MAIN,
 		(gslc_tsRect){button_pos_x,button_pos_y,80,22},(char*)"CC2500",0,E_FONT_BTN,&CbBtnCommon);
 
+	button_pos_x = 210;
+	button_pos_y = 35;
+	button_space_x = 40;
+	button_space_y = 28;
 
+	pElemRef = gslc_ElemCreateTxt(&m_gui,GSLC_ID_AUTO,E_PG_MAIN,(gslc_tsRect){button_pos_x,button_pos_y,80,22},
+		(char*)"Test",0,E_FONT_TITLE);
+	gslc_ElemSetTxtAlign(&m_gui,pElemRef,GSLC_ALIGN_MID_MID);
+	gslc_ElemSetFillEn(&m_gui,pElemRef,false);
+	gslc_ElemSetTxtCol(&m_gui,pElemRef,GSLC_COL_WHITE);
+	button_pos_y +=  button_space_y;
 
+	pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BTN_BAYANG,E_PG_MAIN,
+		(gslc_tsRect){button_pos_x,button_pos_y,80,22},(char*)"Bayang test",0,E_FONT_BTN,&CbBtnCommon);
+	button_pos_y +=  button_space_y;
+
+	pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BTN_NES,E_PG_MAIN,
+		(gslc_tsRect){button_pos_x,button_pos_y,80,22},(char*)"Nintendo NES",0,E_FONT_BTN,&CbBtnCommon);
+	button_pos_y +=  button_space_y;
+
+	pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BTN_GB,E_PG_MAIN,
+		(gslc_tsRect){button_pos_x,button_pos_y,80,22},(char*)"Gameboy",0,E_FONT_BTN,&CbBtnCommon);
+	button_pos_y +=  button_space_y;
+
+	pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BTN_DOOM,E_PG_MAIN,
+		(gslc_tsRect){button_pos_x,button_pos_y,80,22},(char*)"Play Doom",0,E_FONT_BTN,&CbBtnCommon);
+	button_pos_y +=  button_space_y;
+
+	pElemRef = gslc_ElemCreateBtnTxt(&m_gui,E_ELEM_BTN_PACMAN,E_PG_MAIN,
+		(gslc_tsRect){button_pos_x,button_pos_y,80,22},(char*)"Play Pacman",0,E_FONT_BTN,&CbBtnCommon);
+	button_pos_y +=  button_space_y;
 
 	// LED
 
@@ -853,7 +884,7 @@ void loop() {
 
 				//initializes the UDP state
 				//This initializes the transfer buffer
-				udp.begin(WiFi.localIP(),udpPort);
+				// udp.begin(WiFi.localIP(),udpPort);
 				connected = true;
 				break;
 			case SYSTEM_EVENT_STA_DISCONNECTED:
