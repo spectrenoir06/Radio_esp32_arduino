@@ -5,12 +5,12 @@
 	it under the terms of the GNU General Public License as published by
 	the Free Software Foundation, either version 3 of the License, or
 	(at your option) any later version.
-	
+
 	Multiprotocol is distributed in the hope that it will be useful,
 	but WITHOUT ANY WARRANTY; without even the implied warranty of
 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 	GNU General Public License for more details.
-	
+
 	You should have received a copy of the GNU General Public License
 	along with Multiprotocol.  If not, see <http://www.gnu.org/licenses/>.
 */
@@ -30,7 +30,7 @@ static void __attribute__((unused)) frskyX_set_start(uint8_t ch )
 	CC2500_Strobe(CC2500_SIDLE);
 	CC2500_WriteReg(CC2500_25_FSCAL1, calData[ch]);
 	CC2500_WriteReg(CC2500_0A_CHANNR, hopping_frequency[ch]);
-}		
+}
 
 static void __attribute__((unused)) frskyX_init()
 {
@@ -38,19 +38,19 @@ static void __attribute__((unused)) frskyX_init()
 	//
 	for(uint8_t c=0;c < 48;c++)
 	{//calibrate hop channels
-		CC2500_Strobe(CC2500_SIDLE);    
+		CC2500_Strobe(CC2500_SIDLE);
 		CC2500_WriteReg(CC2500_0A_CHANNR,hopping_frequency[c]);
 		CC2500_Strobe(CC2500_SCAL);
 		delayMicroseconds(900);//
 		calData[c] = CC2500_ReadReg(CC2500_25_FSCAL1);
 	}
-	//#######END INIT########		
+	//#######END INIT########
 }
 
 static void __attribute__((unused)) frskyX_initialize_data(uint8_t adr)
 {
-	CC2500_WriteReg(CC2500_0C_FSCTRL0,option);	// Frequency offset hack 
-	CC2500_WriteReg(CC2500_18_MCSM0,    0x8);	
+	CC2500_WriteReg(CC2500_0C_FSCTRL0,option);	// Frequency offset hack
+	CC2500_WriteReg(CC2500_18_MCSM0,    0x8);
 	CC2500_WriteReg(CC2500_09_ADDR, adr ? 0x03 : rx_tx_addr[3]);
 	CC2500_WriteReg(CC2500_07_PKTCTRL1,0x05);
 }
@@ -129,7 +129,7 @@ static void __attribute__((unused)) frskyX_data_frame()
 	//
 	static uint8_t chan_offset=0;
 	uint16_t chan_0 ;
-	uint16_t chan_1 ; 
+	uint16_t chan_1 ;
 	//
     // data frames sent every 9ms; failsafe every 9 seconds
 	#ifdef FAILSAFE_ENABLE
@@ -150,13 +150,13 @@ static void __attribute__((unused)) frskyX_data_frame()
 		}
 		failsafe_count++;
 	#endif
-	
+
 	packet[0] = (sub_protocol & 0x02 ) ? 0x20 : 0x1D ;	// LBT or FCC
 	packet[1] = rx_tx_addr[3];
 	packet[2] = rx_tx_addr[2];
 	packet[3] = 0x02;
-	//  
-	packet[4] = (FrX_chanskip<<6)|hopping_frequency_no; 
+	//
+	packet[4] = (FrX_chanskip<<6)|hopping_frequency_no;
 	packet[5] = FrX_chanskip>>2;
 	packet[6] = RX_num;
 	//packet[7] = FLAGS 00 - standard packet
@@ -167,7 +167,7 @@ static void __attribute__((unused)) frskyX_data_frame()
 	#else
 		packet[7] = 0;
 	#endif
-	packet[8] = 0;		
+	packet[8] = 0;
 	//
 	uint8_t startChan = chan_offset;	for(uint8_t i = 0; i <12 ; i+=3)
 	{//12 bytes of channel data
@@ -192,12 +192,12 @@ static void __attribute__((unused)) frskyX_data_frame()
 		packet[9+i+2]=chan_1>>4;
 	}
 	packet[21] = (FrX_receive_seq << 4) | FrX_send_seq ;//8 at start
-	
+
 	if(sub_protocol & 0x01 )			// in X8 mode send only 8ch every 9ms
 		chan_offset = 0 ;
 	else
 		chan_offset^=0x08;
-	
+
 	uint8_t limit = (sub_protocol & 2 ) ? 31 : 28 ;
 	for (uint8_t i=22;i<limit;i++)
 		packet[i]=0;
@@ -211,7 +211,7 @@ static void __attribute__((unused)) frskyX_data_frame()
 					ok_to_send=false;
 					break;
 				}
-				packet[i]=SportData[sport_index];	
+				packet[i]=SportData[sport_index];
 				sport_index= (sport_index+1)& (MAX_SPORT_BUFFER-1);
 				idxs++;
 			}
@@ -220,8 +220,8 @@ static void __attribute__((unused)) frskyX_data_frame()
 			for(uint8_t i=0;i<idxs;i++)
 			{
 				Serial.print(packet[23+i],HEX);
-				Serial.print(" ");	
-			}		
+				Serial.print(" ");
+			}
 			Serial.println(" ");
 		#endif
 	#endif // SPORT_POLLING
@@ -234,12 +234,12 @@ static void __attribute__((unused)) frskyX_data_frame()
 uint16_t ReadFrSkyX()
 {
 	switch(state)
-	{	
-		default: 
-			frskyX_set_start(47);		
+	{
+		default:
+			frskyX_set_start(47);
 			CC2500_SetPower();
 			CC2500_Strobe(CC2500_SFRX);
-			//		
+			//
 			frskyX_build_bind_packet();
 			CC2500_Strobe(CC2500_SIDLE);
 			CC2500_WriteData(packet, packet[0]+1);
@@ -252,20 +252,20 @@ uint16_t ReadFrSkyX()
 			frskyX_initialize_data(0);
 			hopping_frequency_no=0;
 			BIND_DONE;
-			state++;			
-			break;		
+			state++;
+			break;
 		case FRSKY_DATA1:
 			if ( prev_option != option )
 			{
-				CC2500_WriteReg(CC2500_0C_FSCTRL0,option);	// Frequency offset hack 
+				CC2500_WriteReg(CC2500_0C_FSCTRL0,option);	// Frequency offset hack
 				prev_option = option ;
 			}
 			CC2500_SetTxRxMode(TX_EN);
 			frskyX_set_start(hopping_frequency_no);
-			CC2500_SetPower();		
+			CC2500_SetPower();
 			CC2500_Strobe(CC2500_SFRX);
 			hopping_frequency_no = (hopping_frequency_no+FrX_chanskip)%47;
-			CC2500_Strobe(CC2500_SIDLE);		
+			CC2500_Strobe(CC2500_SIDLE);
 			CC2500_WriteData(packet, packet[0]+1);
 			//
 //			frskyX_data_frame();
@@ -276,12 +276,12 @@ uint16_t ReadFrSkyX()
 			CC2500_Strobe(CC2500_SIDLE);
 			state++;
 			return 200;
-		case FRSKY_DATA3:		
+		case FRSKY_DATA3:
 			CC2500_Strobe(CC2500_SRX);
 			state++;
 			return 3100;
 		case FRSKY_DATA4:
-			len = CC2500_ReadReg(CC2500_3B_RXBYTES | CC2500_READ_BURST) & 0x7F;	
+			len = CC2500_ReadReg(CC2500_3B_RXBYTES | CC2500_READ_BURST) & 0x7F;
 			if (len && (len<=(0x0E + 3)))				//Telemetry frame is 17
 			{
 				packet_count=0;
@@ -291,7 +291,7 @@ uint16_t ReadFrSkyX()
 					//parse telemetry packets here
 					//The same telemetry function used by FrSky(D8).
 				#endif
-			} 
+			}
 			else
 			{
 				packet_count++;
@@ -316,8 +316,8 @@ uint16_t ReadFrSkyX()
 			}
 			state = FRSKY_DATA1;
 			return 500;
-	}		
-	return 1;		
+	}
+	return 1;
 }
 
 uint16_t initFrSkyX()
@@ -333,14 +333,14 @@ uint16_t initFrSkyX()
 	//rx_tx_addr[2]=0xFD;
 	//************************
 	frskyX_init();
-#if defined  SPORT_POLLING
-#ifdef INVERT_SERIAL
-	start_timer4() ;
-#endif
+#if defined SPORT_POLLING
+	#ifdef INVERT_SERIAL
+		start_timer4() ;
+	#endif
 #endif
 	//
 	if(IS_BIND_IN_PROGRESS)
-	{	   
+	{
 		state = FRSKY_BIND;
 		frskyX_initialize_data(1);
 	}
@@ -354,5 +354,5 @@ uint16_t initFrSkyX()
 	FrX_send_seq = 0x08 ;
 	FrX_receive_seq = 0 ;
 	return 10000;
-}	
+}
 #endif

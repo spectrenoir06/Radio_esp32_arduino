@@ -196,7 +196,7 @@ static int16_t DebugOut(char ch) { Serial.write(ch); return 0; }
 // Input a value 0 to 255 to get a color value.
 // The colours are a transition r - g - b - back to r.
 uint32_t Wheel(byte WheelPos) {
-	if(WheelPos < 85) {
+	if (WheelPos < 85) {
 		return leds.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
 	} else if(WheelPos < 170) {
 		WheelPos -= 85;
