@@ -6,16 +6,16 @@
 // #define USE_SD
 // #define USE_TS
 #define USE_ADC
-#define USE_WIFI
+// #define USE_WIFI
 
 #define USE_INT_ADC
 #define USE_EXT_ADC
 
 #define PRINT_ADC
 #define PRINT_TS
-#define PRINT_RADIO
+// #define PRINT_RADIO
 #define PRINT_SD
-#define PRINT_WIFI
+// #define PRINT_WIFI
 
 #define FONT_SIZE 1
 

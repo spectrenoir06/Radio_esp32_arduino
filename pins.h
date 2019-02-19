@@ -1,28 +1,27 @@
 #include "config.h"
 
-#define NEOPIXEL_pin  5
+#define NEOPIXEL_pin	5
 
-#define TFT_DC_pin    2
-#define TFT_CSN_pin   15
-#define TOUCH_CSN_pin 4
-#define SD_CSN_pin    16
-#define ADC_CSN_pin   21
+#define TFT_DC_pin		2
+#define TFT_CSN_pin		15
+#define TOUCH_CSN_pin	4
+#define SD_CSN_pin		16
+#define ADC_CSN_pin		21
 
-#define NRF_CE_pin  35// not use
-#define CYRF_RST_pin  17
-#define CC25_CSN_pin  27
-#define A7105_CSN_pin 14
+#define TOUCH_IRQ_pin	22
 
-#define PE1_pin       13
-#define PE2_pin       12
+// #define NRF_CE_pin    35// not use
 
-#ifdef OLD
-	#define NRF_CSN_pin  26
-	#define CYRF_CSN_pin 25
-#else
-	#define NRF_CSN_pin  33
-	#define CYRF_CSN_pin 32
-#endif
+#define NRF_CSN_pin		33
+#define CYRF_CSN_pin	32
+#define CC25_CSN_pin	27
+#define A7105_CSN_pin	14
+
+#define CYRF_RST_pin	17
+
+#define PE1_pin			13
+#define PE2_pin			12
+
 
 #define	PE1_on  		digitalWrite(PE1_pin,HIGH)
 #define	PE1_off		 	digitalWrite(PE1_pin,LOW)
