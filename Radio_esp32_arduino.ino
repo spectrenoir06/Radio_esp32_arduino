@@ -17,7 +17,10 @@
 
 #include "pins.h"
 #include "Multiprotocol.h"
+
 #include "iface_nrf24l01.h"
+#include "iface_cc2500.h"
+
 #include "config.h"
 #include "TX_Def.h"
 #include "wifi_config.h"
@@ -32,8 +35,11 @@
 
 //Global constants/variables
 uint32_t MProtocol_id;//tx id,
-uint32_t MProtocol_id_master;
+uint32_t MProtocol_id_master = 0x42;
 uint32_t blink=0,last_signal=0;
+uint8_t calData[48];
+#define MAX_PKT 29
+uint8_t pkt[MAX_PKT];//telemetry receiving packets
 //
 uint16_t counter;
 uint8_t  channel;
@@ -81,7 +87,7 @@ uint16_t failsafe_count;
 //
 uint16_t state;
 uint8_t  len;
-uint8_t  RX_num;
+uint8_t  RX_num = 0;
 uint8_t addresses[5] = {0xe7,0xe7,0xe7,0xe7,0xe7};
 
 // uint16_t adc_value[8];
@@ -107,6 +113,41 @@ char*	text[16] = {
 	"ADC15:",
 	"ADC16:"
 };
+
+
+void delayMilliseconds(uint32_t mil) {
+	delay(mil);
+}
+
+// Convert 32b id to rx_tx_addr
+static void set_rx_tx_addr(uint32_t id)
+{ // Used by almost all protocols
+	rx_tx_addr[0] = (id >> 24) & 0xFF;
+	rx_tx_addr[1] = (id >> 16) & 0xFF;
+	rx_tx_addr[2] = (id >>  8) & 0xFF;
+	rx_tx_addr[3] = (id >>  0) & 0xFF;
+	rx_tx_addr[4] = (rx_tx_addr[2]&0xF0)|(rx_tx_addr[3]&0x0F);
+}
+
+void modules_reset()
+{
+	#ifdef	CC2500_INSTALLED
+		CC2500_Reset();
+	#endif
+	#ifdef	A7105_INSTALLED
+		A7105_Reset();
+	#endif
+	#ifdef	CYRF6936_INSTALLED
+		CYRF_Reset();
+	#endif
+	#ifdef	NRF24L01_INSTALLED
+		NRF24L01_Reset();
+	#endif
+
+	//Wait for every component to reset
+	delayMilliseconds(100);
+	prev_power=0xFD;		// unused power value
+}
 
 // Define debug message function
 static int16_t DebugOut(char ch) { Serial.write(ch); return 0; }
@@ -191,9 +232,10 @@ void setup() {
 	digitalWrite(ADC_CSN_pin, HIGH);
 	digitalWrite(SD_CSN_pin, HIGH);
 
+	MProtocol_id = RX_num + MProtocol_id_master;
 
-	PE1_on; PE2_off; // NRF24
-	// PE1_off; PE2_on; // CC2500
+	// PE1_on; PE2_off; // NRF24
+	PE1_off; PE2_on; // CC2500
 
 
 	A7105_CSN_on;
@@ -270,8 +312,11 @@ void setup() {
 		WiFi.begin(networkName, networkPswd);
 	#endif
 
+	modules_reset();
 
-	initBAYANG();
+	// initBAYANG();
+	initFrSkyX();
+
 	delay(5);
 }
 
@@ -379,7 +424,10 @@ void loop() {
 		// 	udp.endPacket();
 		// }
 	#endif
-	BAYANG_callback();
+
+	// BAYANG_callback();
+	ReadFrSkyX();
+
 	update_tft();
 	#ifdef USE_LED
 		leds.setPixelColor(0, Wheel(color++));
