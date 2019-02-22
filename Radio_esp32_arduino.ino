@@ -53,13 +53,30 @@ uint8_t  Channel_AUX;
 	uint16_t Failsafe_data[NUM_CHN];
 #endif
 
+//Channel mapping for protocols
+const uint8_t CH_AETR[]={AILERON, ELEVATOR, THROTTLE, RUDDER, CH5, CH6, CH7, CH8, CH9, CH10, CH11, CH12, CH13, CH14, CH15, CH16};
+const uint8_t CH_TAER[]={THROTTLE, AILERON, ELEVATOR, RUDDER, CH5, CH6, CH7, CH8, CH9, CH10, CH11, CH12, CH13, CH14, CH15, CH16};
+const uint8_t CH_RETA[]={RUDDER, ELEVATOR, THROTTLE, AILERON, CH5, CH6, CH7, CH8, CH9, CH10, CH11, CH12, CH13, CH14, CH15, CH16};
+const uint8_t CH_EATR[]={ELEVATOR, AILERON, THROTTLE, RUDDER, CH5, CH6, CH7, CH8, CH9, CH10, CH11, CH12, CH13, CH14, CH15, CH16};
+
 //Serial protocol
-uint8_t sub_protocol = H8S3D;
+uint8_t sub_protocol = 0;
 uint8_t protocol;
 uint8_t option;
 uint8_t cur_protocol[3];
 uint8_t prev_option;
 uint8_t prev_power=0xFD; // unused power value
+
+
+uint8_t v_lipo1;
+uint8_t v_lipo2;
+uint8_t RX_RSSI;
+uint8_t TX_RSSI;
+uint8_t RX_LQI;
+uint8_t TX_LQI;
+uint8_t telemetry_link=0;
+uint8_t telemetry_counter=0;
+uint8_t telemetry_lost;
 
 
 // Protocol variables
@@ -234,8 +251,10 @@ void setup() {
 
 	MProtocol_id = RX_num + MProtocol_id_master;
 
-	// PE1_on; PE2_off; // NRF24
-	PE1_off; PE2_on; // CC2500
+	// PE1_off; PE2_off; // A7105
+	// PE1_on; PE2_off;  // NRF24
+	// PE1_off; PE2_on;  // CC2500
+	PE1_on; PE2_on;   // CYRF6936
 
 
 	A7105_CSN_on;
@@ -243,6 +262,8 @@ void setup() {
 	NRF_CSN_on;
 	CYRF_CSN_on;
 	CYRF_RST_HI; //reset cyrf
+
+	BIND_IN_PROGRESS;		// Request bind
 
 
 	#ifdef USE_LED
@@ -315,8 +336,9 @@ void setup() {
 	modules_reset();
 	delay(500);
 
-	// initBAYANG();
-	delay(initFrSky_2way() / 1000.0);
+	// sub_protocol = H8S3D ;initBAYANG();
+	// delay(initFrSky_2way()/1000.0);
+	protocol = PROTO_DSM; sub_protocol = DSM2_22; delay(initDsm()/1000.0);
 }
 
 uint8_t color = 0;
@@ -424,8 +446,9 @@ void loop() {
 		// }
 	#endif
 
-	// BAYANG_callback();
-	delay(ReadFrSky_2way() / 1000.0);
+	// delay(BAYANG_callback()/1000.0);
+	// delay(ReadFrSky_2way() / 1000.0);
+	delay(ReadDsm() / 1000.0);
 
 	// update_tft();
 	#ifdef USE_LED

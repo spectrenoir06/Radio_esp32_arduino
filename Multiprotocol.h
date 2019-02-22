@@ -63,6 +63,17 @@ enum PROTOCOLS
 	PROTO_ESKY150	= 35,	// =>NRF24L01
 	PROTO_H8_3D		= 36,	// =>NRF24L01
 	PROTO_CORONA	= 37,	// =>CC2500
+	PROTO_CFLIE     = 38,   // =>NRF24L01
+	PROTO_HITEC     = 39,   // =>CC2500
+	PROTO_WFLY		= 40,	// =>CYRF6936
+	PROTO_BUGS		= 41,	// =>A7105
+	PROTO_BUGSMINI	= 42,	// =>NRF24L01
+	PROTO_TRAXXAS	= 43,	// =>CYRF6936
+	PROTO_NCC1701	= 44,	// =>NRF24L01
+	PROTO_E01X		= 45,	// =>NRF24L01
+	PROTO_V911S		= 46,	// =>NRF24L01
+	PROTO_GD00X		= 47,	// =>NRF24L01
+	PROTO_TEST		= 63,	// =>NRF24L01
 };
 
 enum Flysky
@@ -71,7 +82,7 @@ enum Flysky
 	V9X9	= 1,
 	V6X6	= 2,
 	V912	= 3,
-	CX20	= 4
+	CX20	= 4,
 };
 enum Hubsan
 {
@@ -89,7 +100,7 @@ enum AFHDS2A
 enum Hisky
 {
 	Hisky	= 0,
-	HK310	= 1
+	HK310	= 1,
 };
 enum DSM
 {
@@ -97,7 +108,7 @@ enum DSM
 	DSM2_11	= 1,
 	DSMX_22	= 2,
 	DSMX_11	= 3,
-	DSM_AUTO = 4
+	DSM_AUTO = 4,
 };
 enum YD717
 {
@@ -105,22 +116,25 @@ enum YD717
 	SKYWLKR	= 1,
 	SYMAX4	= 2,
 	XINXUN	= 3,
-	NIHUI	= 4
+	NIHUI	= 4,
 };
 enum KN
 {
 	WLTOYS	= 0,
-	FEILUN	= 1
+	FEILUN	= 1,
 };
 enum SYMAX
 {
 	SYMAX	= 0,
-	SYMAX5C	= 1
+	SYMAX5C	= 1,
 };
 enum SLT
 {
-	SLT		= 0,
-	VISTA	= 1
+	SLT_V1	= 0,
+	SLT_V2	= 1,
+	Q100	= 2,
+	Q200	= 3,
+	MR100	= 4,
 };
 enum CX10
 {
@@ -142,14 +156,14 @@ enum Q2X2
 };
 enum CG023
 {
-	CG023	= 0,
-	YD829	= 1,
+    CG023	= 0,
+    YD829	= 1,
 };
 enum BAYANG
 {
-	BAYANG	= 0,
-	H8S3D	= 1,
-	X16_AH  = 2,
+    BAYANG	= 0,
+    H8S3D	= 1,
+    X16_AH  = 2,
 	IRDRONE = 3,
 };
 enum MT99XX
@@ -158,7 +172,7 @@ enum MT99XX
 	H7		= 1,
 	YZ		= 2,
 	LS		= 3,
-	FY805	= 4
+	FY805	= 4,
 };
 enum MJXQ
 {
@@ -180,8 +194,8 @@ enum HONTAI
 {
 	HONTAI	= 0,
 	JJRCX1	= 1,
-	X5C1		= 2,
-	FQ777_951 =3
+	X5C1	= 2,
+	FQ777_951 =3,
 };
 enum V2X2
 {
@@ -227,6 +241,18 @@ enum CORONA
 {
 	COR_V1	= 0,
 	COR_V2	= 1,
+	FD_V3	= 2,
+};
+enum HITEC
+{
+	OPT_FW	= 0,
+	OPT_HUB	= 1,
+	MINIMA	= 2,
+};
+enum E01X
+{
+	E012	= 0,
+	E015	= 1,
 };
 
 #define NONE 		0
@@ -258,7 +284,9 @@ enum MultiPacketTypes
 	MULTI_TELEMETRY_CONFIG			= 7,
 	MULTI_TELEMETRY_SYNC			= 8,
 	MULTI_TELEMETRY_SPORT_POLLING	= 9,
+	MULTI_TELEMETRY_HITEC			= 10,
 };
+
 
 // Macros
 #define NOP() __asm__ __volatile__("nop")
