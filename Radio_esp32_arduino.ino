@@ -85,7 +85,7 @@ uint8_t  crc8;
 uint16_t seed;
 uint16_t failsafe_count;
 //
-uint16_t state;
+uint16_t state = 0;
 uint8_t  len;
 uint8_t  RX_num = 0;
 uint8_t addresses[5] = {0xe7,0xe7,0xe7,0xe7,0xe7};
@@ -313,11 +313,10 @@ void setup() {
 	#endif
 
 	modules_reset();
+	delay(500);
 
 	// initBAYANG();
-	initFrSkyX();
-
-	delay(5);
+	delay(initFrSky_2way() / 1000.0);
 }
 
 uint8_t color = 0;
@@ -391,10 +390,10 @@ void update_tft() {
 void loop() {
 
 	#if  defined(USE_INT_ADC)
-		Channel_data[0] = analogRead(36) >> 2;//map(analogRead(36), 0x00, 0xFFF, 0x00, 0xFFFF); // 12bit to 16bit
-		Channel_data[1] = analogRead(39) >> 2;//map(analogRead(39), 0x00, 0xFFF, 0x00, 0xFFFF);
-		Channel_data[2] = analogRead(34) >> 2;//map(analogRead(34), 0x00, 0xFFF, 0x00, 0xFFFF);
-		Channel_data[3] = analogRead(35) >> 2;//map(analogRead(35), 0x00, 0xFFF, 0x00, 0xFFFF);
+		Channel_data[0] = analogRead(34)/2; // Roll A  map(analogRead(34), 0x00, 0xFFF, 0x00, 0xFFFF);
+		Channel_data[1] = analogRead(35)/2; // Pith E   map(analogRead(35), 0x00, 0xFFF, 0x00, 0xFFFF);
+		Channel_data[2] = analogRead(36);   // Throttle T   map(analogRead(36), 0x00, 0xFFF, 0x00, 0xFFFF); // 12bit to 16bit
+		Channel_data[3] = analogRead(39)/2; // Yaw R  map(analogRead(39), 0x00, 0xFFF, 0x00, 0xFFFF);
 		Channel_data[13] = 127;
 		Channel_data[14] = 255;
 		Channel_data[15] = 511;
@@ -426,14 +425,14 @@ void loop() {
 	#endif
 
 	// BAYANG_callback();
-	ReadFrSkyX();
+	delay(ReadFrSky_2way() / 1000.0);
 
-	update_tft();
+	// update_tft();
 	#ifdef USE_LED
-		leds.setPixelColor(0, Wheel(color++));
-		leds.show();
+		// leds.setPixelColor(0, Wheel(color++));
+		// leds.show();
 	#endif
-	delay(8);
+	// delay(8);
 }
 
 #ifdef USE_WIFI
