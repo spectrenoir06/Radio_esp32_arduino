@@ -263,7 +263,7 @@ void setup() {
 	CYRF_CSN_on;
 	CYRF_RST_HI; //reset cyrf
 
-	// BIND_IN_PROGRESS;		// Request bind
+	BIND_IN_PROGRESS;		// Request bind
 
 
 	#ifdef USE_LED
@@ -448,7 +448,8 @@ void loop() {
 	#endif
 
 	// delay(BAYANG_callback()/1000.0);
-	delay(ReadFrSky_2way() / 1000.0);
+	ReadFrSky_2way();
+	delay(8);
 	// delay(ReadDsm() / 1000.0);
 
 	// update_tft();
