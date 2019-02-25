@@ -1,6 +1,6 @@
 void SPI_Write(uint8_t command) {
 	SPI.beginTransaction(SPISettings(2000000, MSBFIRST, SPI_MODE0));
-	SPI.transfer(command);
+	SPI.write(command);
 	SPI.endTransaction();
 }
 

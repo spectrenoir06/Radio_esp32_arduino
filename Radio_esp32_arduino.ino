@@ -253,7 +253,7 @@ void setup() {
 
 	digitalWrite(TFT_CSN_pin, HIGH);
 	digitalWrite(TOUCH_CSN_pin, HIGH);
-	// digitalWrite(ADC_CSN_pin, HIGH);
+	digitalWrite(ADC_CSN_pin, HIGH);
 	digitalWrite(SD_CSN_pin, HIGH);
 
 	MProtocol_id = RX_num + MProtocol_id_master;
@@ -442,8 +442,7 @@ void loop() {
 	#ifdef USE_EXT_ADC
 		// adc.readADC(0);
 		// for (int chan = 4; chan < 12; chan++) {
-		// 	//Channel_data[chan] =
-		// 	map(adc.readADC(chan), 0x00, 0x3FF, 0x00, 0xFFFF);
+		// 	//Channel_data[chan] = map(adc.readADC(chan), 0x00, 0x3FF, 0x00, 0xFFFF);
 		// }
 	#endif
 
@@ -465,6 +464,8 @@ void loop() {
 		// 	udp.endPacket();
 		// }
 	#endif
+
+	// adc.readADC(0);
 
 	// delay(BAYANG_callback()/1000.0);
 	TX_MAIN_PAUSE_on;
