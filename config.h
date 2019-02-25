@@ -11,7 +11,7 @@
 #define USE_INT_ADC
 // #define USE_EXT_ADC
 
-#define PRINT_ADC
+// #define PRINT_ADC
 #define PRINT_TS
 // #define PRINT_RADIO
 #define PRINT_SD
@@ -25,9 +25,9 @@
 
 #define	BAYANG_NRF24L01_INO
 #define	FRSKYD_CC2500_INO
+#define	FRSKYX_CC2500_INO
 // #define	DSM_CYRF6936_INO
 // #define DSM_TELEMETRY
-// #define	FRSKYX_CC2500_INO
 
 #define COLOR_BACK 0xD69A
 #define COLOR_TITLE_BAR_TEXT 0xFFFF

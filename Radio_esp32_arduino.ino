@@ -60,7 +60,7 @@ const uint8_t CH_RETA[]={RUDDER, ELEVATOR, THROTTLE, AILERON, CH5, CH6, CH7, CH8
 const uint8_t CH_EATR[]={ELEVATOR, AILERON, THROTTLE, RUDDER, CH5, CH6, CH7, CH8, CH9, CH10, CH11, CH12, CH13, CH14, CH15, CH16};
 
 //Serial protocol
-uint8_t sub_protocol = 0;
+uint8_t sub_protocol = H8S3D;
 uint8_t protocol;
 uint8_t option;
 uint8_t cur_protocol[3];
@@ -263,7 +263,7 @@ void setup() {
 	CYRF_CSN_on;
 	CYRF_RST_HI; //reset cyrf
 
-	BIND_IN_PROGRESS;		// Request bind
+	// BIND_IN_PROGRESS;		// Request bind
 
 
 	#ifdef USE_LED
@@ -337,7 +337,7 @@ void setup() {
 	delay(500);
 
 	// sub_protocol = H8S3D ;initBAYANG();
-	protocol = PROTO_FRSKYD; sub_protocol = 0; delay(initFrSky_2way()/1000.0);
+	delay(initFrSky_2way()/1000.0);
 	// protocol = PROTO_DSM; sub_protocol = DSM2_22; delay(initDsm()/1000.0);
 }
 
@@ -448,8 +448,7 @@ void loop() {
 	#endif
 
 	// delay(BAYANG_callback()/1000.0);
-	ReadFrSky_2way();
-	delay(8);
+	delay(ReadFrSky_2way()/1000.0);
 	// delay(ReadDsm() / 1000.0);
 
 	// update_tft();
