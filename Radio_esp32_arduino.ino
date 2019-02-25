@@ -260,8 +260,8 @@ void setup() {
 
 	// PE1_off; PE2_off; // A7105
 	// PE1_on; PE2_off;  // NRF24
-	PE1_off; PE2_on;  // CC2500
-	// PE1_on; PE2_on;   // CYRF6936
+	// PE1_off; PE2_on;  // CC2500
+	PE1_on; PE2_on;   // CYRF6936
 
 
 	A7105_CSN_on;
@@ -344,8 +344,8 @@ void setup() {
 	delay(500);
 
 	// sub_protocol = H8S3D ;initBAYANG();
-	delay(initFrSky_2way()/1000.0);
-	// protocol = PROTO_DSM; sub_protocol = DSM2_22; delay(initDsm()/1000.0);
+	// delay(initFrSky_2way()/1000.0);
+	protocol = PROTO_DSM; sub_protocol = DSM2_22; delay(initDsm()/1000.0);
 }
 
 uint8_t color = 0;
@@ -459,7 +459,7 @@ void loop() {
 
 	#ifdef USE_WIFI
 		// if(connected){
-		// 	udp.beginPacket(udpAddress, udpPort);
+		// 	udp.beginPacket(u	dpAddress, udpPort);
 		// 		udp.write((uint8_t *)Channel_data, PAYLOAD_SIZE);
 		// 	udp.endPacket();
 		// }
@@ -470,8 +470,8 @@ void loop() {
 	// delay(BAYANG_callback()/1000.0);
 	TX_MAIN_PAUSE_on;
 
-	delay(ReadFrSky_2way()/1000.0);
-	// delay(ReadDsm() / 1000.0);
+	// delay(ReadFrSky_2way()/1000.0);
+	delay(ReadDsm() / 1000.0);
 
 	TX_MAIN_PAUSE_off;
 
