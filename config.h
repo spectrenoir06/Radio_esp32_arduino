@@ -9,7 +9,7 @@
 // #define USE_WIFI
 
 #define USE_INT_ADC
-#define USE_EXT_ADC
+// #define USE_EXT_ADC
 
 #define PRINT_ADC
 #define PRINT_TS

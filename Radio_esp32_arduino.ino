@@ -253,8 +253,8 @@ void setup() {
 
 	// PE1_off; PE2_off; // A7105
 	// PE1_on; PE2_off;  // NRF24
-	// PE1_off; PE2_on;  // CC2500
-	PE1_on; PE2_on;   // CYRF6936
+	PE1_off; PE2_on;  // CC2500
+	// PE1_on; PE2_on;   // CYRF6936
 
 
 	A7105_CSN_on;
@@ -263,7 +263,7 @@ void setup() {
 	CYRF_CSN_on;
 	CYRF_RST_HI; //reset cyrf
 
-	BIND_IN_PROGRESS;		// Request bind
+	// BIND_IN_PROGRESS;		// Request bind
 
 
 	#ifdef USE_LED
@@ -337,8 +337,8 @@ void setup() {
 	delay(500);
 
 	// sub_protocol = H8S3D ;initBAYANG();
-	// delay(initFrSky_2way()/1000.0);
-	protocol = PROTO_DSM; sub_protocol = DSM2_22; delay(initDsm()/1000.0);
+	protocol = PROTO_FRSKYD; sub_protocol = 0; delay(initFrSky_2way()/1000.0);
+	// protocol = PROTO_DSM; sub_protocol = DSM2_22; delay(initDsm()/1000.0);
 }
 
 uint8_t color = 0;
@@ -411,7 +411,7 @@ void update_tft() {
 
 void loop() {
 
-	#if  defined(USE_INT_ADC)
+	#ifdef USE_INT_ADC
 		Channel_data[0] = analogRead(34)/2; // Roll A  map(analogRead(34), 0x00, 0xFFF, 0x00, 0xFFFF);
 		Channel_data[1] = analogRead(35)/2; // Pith E   map(analogRead(35), 0x00, 0xFFF, 0x00, 0xFFFF);
 		Channel_data[2] = analogRead(36);   // Throttle T   map(analogRead(36), 0x00, 0xFFF, 0x00, 0xFFFF); // 12bit to 16bit
@@ -420,18 +420,19 @@ void loop() {
 		Channel_data[14] = 255;
 		Channel_data[15] = 511;
 		Channel_data[16] = 1023;
-		for (int i=0;i<4;i++) {
-			Serial.printf("%d\t", Channel_data[i]);
-		}
-		Serial.print("\n");
 	#endif
 
 	#ifdef USE_EXT_ADC
 		for (int chan = 4; chan < 12; chan++) {
 			Channel_data[chan] = map(adc.readADC(chan), 0x00, 0x3FF, 0x00, 0xFFFF);
-			// Serial.print(Channel_data[chan]); Serial.print("\t");
 		}
-		// Serial.println();
+	#endif
+
+	#ifdef PRINT_ADC
+		for (int i=0;i<16;i++) {
+			Serial.printf("%d\t", Channel_data[i]);
+		}
+		Serial.print("\n");
 	#endif
 
 	#if defined(USE_RADIO) && defined(RADIO_SEND)
@@ -447,8 +448,8 @@ void loop() {
 	#endif
 
 	// delay(BAYANG_callback()/1000.0);
-	// delay(ReadFrSky_2way() / 1000.0);
-	delay(ReadDsm() / 1000.0);
+	delay(ReadFrSky_2way() / 1000.0);
+	// delay(ReadDsm() / 1000.0);
 
 	// update_tft();
 	#ifdef USE_LED
