@@ -24,17 +24,21 @@
 //----------------------------
 void CC2500_WriteReg(uint8_t address, uint8_t data)
 {
+	// Serial.printf("CC2500 Write: 0x%02X, 0x%02X\n", address, data);
 	CC25_CSN_off;
-	SPI_Write(address); 
+	NOP();
+	SPI_Write(address);
 	NOP();
 	SPI_Write(data);
 	CC25_CSN_on;
-} 
+}
 
 //----------------------
 static void CC2500_ReadRegisterMulti(uint8_t address, uint8_t data[], uint8_t length)
 {
+	// Serial.printf("CC2500 Read multi: 0x%02X, len: %d\n", address, length);
 	CC25_CSN_off;
+	NOP();
 	SPI_Write(CC2500_READ_BURST | address);
 	for(uint8_t i = 0; i < length; i++)
 		data[i] = SPI_Read();
@@ -43,14 +47,15 @@ static void CC2500_ReadRegisterMulti(uint8_t address, uint8_t data[], uint8_t le
 
 //--------------------------------------------
 static uint8_t CC2500_ReadReg(uint8_t address)
-{ 
+{
 	uint8_t result;
 	CC25_CSN_off;
 	SPI_Write(CC2500_READ_SINGLE | address);
-	result = SPI_Read();  
+	result = SPI_Read();
 	CC25_CSN_on;
-	return(result); 
-} 
+	// Serial.printf("CC2500 read: 0x%02X, 0x%02X\n", address, result);
+	return(result);
+}
 
 //------------------------
 void CC2500_ReadData(uint8_t *dpbuffer, uint8_t len)
@@ -61,6 +66,7 @@ void CC2500_ReadData(uint8_t *dpbuffer, uint8_t len)
 //*********************************************
 void CC2500_Strobe(uint8_t state)
 {
+	// Serial.printf("CC2500 strobe: 0x%02X\n", state);
 	CC25_CSN_off;
 	SPI_Write(state);
 	CC25_CSN_on;

@@ -9,7 +9,7 @@
 // #define USE_WIFI
 
 #define USE_INT_ADC
-// #define USE_EXT_ADC
+#define USE_EXT_ADC
 
 // #define PRINT_ADC
 #define PRINT_TS
@@ -23,9 +23,11 @@
 #define CC2500_INSTALLED
 // #define CYRF6936_INSTALLED
 
+// #define TELEMETRY
+
 #define	BAYANG_NRF24L01_INO
 #define	FRSKYD_CC2500_INO
-#define	FRSKYX_CC2500_INO
+// #define	FRSKYX_CC2500_INO
 // #define	DSM_CYRF6936_INO
 // #define DSM_TELEMETRY
 

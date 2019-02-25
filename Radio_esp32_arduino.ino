@@ -67,6 +67,13 @@ uint8_t cur_protocol[3];
 uint8_t prev_option;
 uint8_t prev_power=0xFD; // unused power value
 
+uint8_t pass = 0;
+uint8_t pktt[MAX_PKT];//telemetry receiving packets
+
+#define TXBUFFER_SIZE 96
+volatile uint8_t tx_buff[TXBUFFER_SIZE];
+volatile uint8_t tx_head=0;
+volatile uint8_t tx_tail=0;
 
 uint8_t v_lipo1;
 uint8_t v_lipo2;
@@ -246,7 +253,7 @@ void setup() {
 
 	digitalWrite(TFT_CSN_pin, HIGH);
 	digitalWrite(TOUCH_CSN_pin, HIGH);
-	digitalWrite(ADC_CSN_pin, HIGH);
+	// digitalWrite(ADC_CSN_pin, HIGH);
 	digitalWrite(SD_CSN_pin, HIGH);
 
 	MProtocol_id = RX_num + MProtocol_id_master;
@@ -416,16 +423,28 @@ void loop() {
 		Channel_data[1] = analogRead(35)/2; // Pith E   map(analogRead(35), 0x00, 0xFFF, 0x00, 0xFFFF);
 		Channel_data[2] = analogRead(36);   // Throttle T   map(analogRead(36), 0x00, 0xFFF, 0x00, 0xFFFF); // 12bit to 16bit
 		Channel_data[3] = analogRead(39)/2; // Yaw R  map(analogRead(39), 0x00, 0xFFF, 0x00, 0xFFFF);
+
+		Channel_data[4] = 0;
+		Channel_data[5] = 0;
+		Channel_data[6] = 0;
+		Channel_data[7] = 0;
+		Channel_data[8] = 0;
+		Channel_data[9] = 0;
+		Channel_data[10] = 0;
+
+		Channel_data[11] = 1023;
+		Channel_data[12] = 1023;
 		Channel_data[13] = 127;
 		Channel_data[14] = 255;
 		Channel_data[15] = 511;
-		Channel_data[16] = 1023;
 	#endif
 
 	#ifdef USE_EXT_ADC
-		for (int chan = 4; chan < 12; chan++) {
-			Channel_data[chan] = map(adc.readADC(chan), 0x00, 0x3FF, 0x00, 0xFFFF);
-		}
+		// adc.readADC(0);
+		// for (int chan = 4; chan < 12; chan++) {
+		// 	//Channel_data[chan] =
+		// 	map(adc.readADC(chan), 0x00, 0x3FF, 0x00, 0xFFFF);
+		// }
 	#endif
 
 	#ifdef PRINT_ADC
@@ -448,8 +467,12 @@ void loop() {
 	#endif
 
 	// delay(BAYANG_callback()/1000.0);
+	TX_MAIN_PAUSE_on;
+
 	delay(ReadFrSky_2way()/1000.0);
 	// delay(ReadDsm() / 1000.0);
+
+	TX_MAIN_PAUSE_off;
 
 	// update_tft();
 	#ifdef USE_LED

@@ -114,6 +114,7 @@ uint16_t initFrSky_2way()
 
 uint16_t ReadFrSky_2way()
 {
+	// Serial.printf("State: %d\n", state);
 	if (state < FRSKY_BIND_DONE)
 	{
 		frsky2way_build_bind_packet();
@@ -130,6 +131,7 @@ uint16_t ReadFrSky_2way()
 	}
 	if (state == FRSKY_BIND_DONE)
 	{
+		Serial.printf("Bind ok\n");
 		state = FRSKY_DATA2;
 		frsky2way_init(0);
 		counter = 0;
