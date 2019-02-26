@@ -31,7 +31,7 @@
 
 // #include "audio.hpp"
 
-#define PAYLOAD_SIZE 16
+#define PAYLOAD_SIZE 32
 
 //Global constants/variables
 uint32_t MProtocol_id;//tx id,
@@ -138,9 +138,8 @@ char*	text[16] = {
 	"ADC16:"
 };
 
-
-void delayMilliseconds(uint32_t mil) {
-	delay(mil);
+void delayMilliseconds(uint32_t t) {
+	delay(t);
 }
 
 // Convert 32b id to rx_tx_addr
@@ -169,12 +168,9 @@ void modules_reset()
 	#endif
 
 	//Wait for every component to reset
-	delayMilliseconds(100);
+	delay(100);
 	prev_power=0xFD;		// unused power value
 }
-
-// Define debug message function
-static int16_t DebugOut(char ch) { Serial.write(ch); return 0; }
 
 #ifdef USE_TFT
 	Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CSN_pin, TFT_DC_pin);
@@ -217,25 +213,21 @@ static int16_t DebugOut(char ch) { Serial.write(ch); return 0; }
 #endif
 
 #ifdef USE_LED
-// Input a value 0 to 255 to get a color value.
-// The colours are a transition r - g - b - back to r.
-uint32_t Wheel(byte WheelPos) {
-	if (WheelPos < 85) {
-		return leds.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
-	} else if(WheelPos < 170) {
-		WheelPos -= 85;
-		return leds.Color(255 - WheelPos * 3, 0, WheelPos * 3);
-	} else {
-		WheelPos -= 170;
-		return leds.Color(0, WheelPos * 3, 255 - WheelPos * 3);
+	uint32_t Wheel(byte WheelPos) {
+		if (WheelPos < 85) {
+			return leds.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
+		} else if(WheelPos < 170) {
+			WheelPos -= 85;
+			return leds.Color(255 - WheelPos * 3, 0, WheelPos * 3);
+		} else {
+			WheelPos -= 170;
+			return leds.Color(0, WheelPos * 3, 255 - WheelPos * 3);
+		}
 	}
-}
 #endif
 
 void setup() {
 	Serial.begin(115200);
-	// gslc_InitDebug(&DebugOut);
-	// SPI.begin();
 
 	pinMode(TFT_CSN_pin, OUTPUT);
 	pinMode(TOUCH_CSN_pin, OUTPUT);
@@ -270,33 +262,24 @@ void setup() {
 	CYRF_CSN_on;
 	CYRF_RST_HI; //reset cyrf
 
-	// BIND_IN_PROGRESS;		// Request bind
+	BIND_IN_PROGRESS;		// Request bind
 
 
 	#ifdef USE_LED
 		leds.begin();
-		delay(2);
-		// while (42) {
-			leds.setPixelColor(0, leds.Color(0,0,0));
-			// leds.show();
-			// delay(500);
-			// leds.setPixelColor(0, leds.Color(0,100,0));
-			// leds.show();
-			// delay(500);
-			// leds.setPixelColor(0, leds.Color(0,0,100));
-			// leds.show();
-			// delay(500);
-			Serial.println("LEDS");
-		// }
 		leds.setBrightness(64);
+		leds.setPixelColor(0, leds.Color(0,0,0));
 		leds.show();
+		Serial.println("USE_LED");
 	#endif
 
 	#ifdef USE_EXT_ADC
 		adc.begin(ADC_CSN_pin);
+		Serial.println("USE_EXT_ADC");
 	#endif
 
 	#ifdef USE_SD
+		Serial.println("USE_SD");
 		if(!SD.begin(SD_CSN_pin)){
 			Serial.println("Card Mount Failed");
 			cardState = 0;
@@ -326,6 +309,7 @@ void setup() {
 	#endif
 
 	#ifdef USE_TFT
+		Serial.println("USE_TFT");
 		tft.begin();
 		tft.setRotation(1); // v3 = 3
 		tft.fillScreen(ILI9341_BLACK);
@@ -334,6 +318,7 @@ void setup() {
 	#endif
 
 	#ifdef USE_WIFI
+		Serial.println("USE_WIFI");
 		Serial.println("Connecting to WiFi network: " + String(networkName));
 		WiFi.disconnect(true);
 		WiFi.onEvent(WiFiEvent);
@@ -350,137 +335,116 @@ void setup() {
 
 uint8_t color = 0;
 
-void update_tft() {
+#ifdef USE_TFT
+	void update_tft() {
 
-	#ifdef USE_TFT
 		// tft.fillScreen(ILI9341_BLACK);
 		tft.setCursor(0, 0);
-		// tft.println("Hello");
-	#endif
 
-	#if defined(USE_TFT) && defined(PRINT_ADC)
-		tft.print("\nADC inputs: \n");
-		// #ifdef USE_EXT_ADC
-		// 	tft.println("(EXT)");
-		// #else
-		// 	tft.println("(INT)");
-		// #endif
-		for (int chan=0;chan,chan<16;chan++) {
-			// tft.printf("  [%02d] = %04x [%02d%%]\n", chan, Channel_data[chan], map(Channel_data[chan],0x0000, 0xFFFF, 0, 99));
-			// Serial.printf("  [%02d] = %04x [%02d%%]\n", chan, Channel_data[chan], map(Channel_data[chan],0x0000, 0xFFFF, 0, 99));
-			// tft.print("  [");
-			// tft.print(chan);
-			// tft.print("] = ");
-			// tft.print(Channel_data[chan]);
-			// tft.println("   ");
-		}
-	#endif
+		#if defined(PRINT_ADC)
+			tft.print("\nADC inputs: \n");
+			for (int chan=0;chan,chan<16;chan++) {
+				tft.printf("  [%02d] = %04x [%02d%%]\n", chan, Channel_data[chan], map(Channel_data[chan],0x0000, 0xFFFF, 0, 99));
+			}
+		#endif
 
-	#if defined(USE_TFT) && defined(USE_TS) && defined(PRINT_TS)
-		tft.println("\nTouchScreen:");
-		if (ts.touched()) {
-			TS_Point p = ts.getPoint();
-			tft.println("\n Raw:");
-			tft.print("  x: "); tft.print(p.x); tft.println("  ");
-			tft.print("  y: "); tft.print(p.y); tft.println("  ");
-			tft.print("  z: "); tft.print(p.z); tft.println("  ");
-			// TS_Point p = ts.getPointCalc();
-			// tft.println("\nCalibrate:");
-			// tft.print("  x: "); tft.print(p.x); tft.println("     ");
-			// tft.print("  y: "); tft.print(p.y); tft.println("     ");
-			// tft.print("  z: "); tft.print(p.z); tft.println("     ");
-			// tft.fillCircle(p.x, p.y, 2, ILI9341_RED);
+		#if defined(USE_TS) && defined(PRINT_TS)
+			tft.println("\nTouchScreen:");
+			if (ts.touched()) {
+				TS_Point p = ts.getPoint();
+				tft.println("\n Raw:");
+				tft.print("  x: "); tft.print(p.x); tft.println("  ");
+				tft.print("  y: "); tft.print(p.y); tft.println("  ");
+				tft.print("  z: "); tft.print(p.z); tft.println("  ");
+				// TS_Point p = ts.getPointCalc();
+				// tft.println("\nCalibrate:");
+				// tft.print("  x: "); tft.print(p.x); tft.println("     ");
+				// tft.print("  y: "); tft.print(p.y); tft.println("     ");
+				// tft.print("  z: "); tft.print(p.z); tft.println("     ");
+				// tft.fillCircle(p.x, p.y, 2, ILI9341_RED);
 
-			// Serial.print("x = "); Serial.println(p.x);
-			// Serial.print("y = "); Serial.println(p.y);
-		} else {
-			tft.println("\n Raw:");
-			tft.println("  x:       ");
-			tft.println("  y:       ");
-			tft.println("  z:       ");
-			// tft.println("\nCalibrate:");
-			// tft.println("  x:       ");
-			// tft.println("  y:       ");
-			// tft.println("  z:       ");
-		}
-	#endif
+				// Serial.print("x = "); Serial.println(p.x);
+				// Serial.print("y = "); Serial.println(p.y);
+			} else {
+				tft.println("\n Raw:");
+				tft.println("  x:       ");
+				tft.println("  y:       ");
+				tft.println("  z:       ");
+				// tft.println("\nCalibrate:");
+				// tft.println("  x:       ");
+				// tft.println("  y:       ");
+				// tft.println("  z:       ");
+			}
+		#endif
 
-	#if defined(USE_TFT) && defined(USE_WIFI) && defined(PRINT_WIFI)
-		tft.printf("\nWifi:\n  SSID: %s\n  IP: ", WIFI_SSID);
-		if (connected)
-			tft.println(WiFi.localIP());
-		else
-			tft.println("disconnected");
-	#endif
-
-	// tft.drawCircle( 30, 240-30, 2, ILI9341_RED);
-}
+		#if defined(USE_WIFI) && defined(PRINT_WIFI)
+			tft.printf("\nWifi:\n  SSID: %s\n  IP: ", WIFI_SSID);
+			if (connected)
+				tft.println(WiFi.localIP());
+			else
+				tft.println("disconnected");
+		#endif
+	}
+#endif
 
 void loop() {
 
-	#ifdef USE_INT_ADC
-		Channel_data[0] = analogRead(34)/2; // Roll A  map(analogRead(34), 0x00, 0xFFF, 0x00, 0xFFFF);
-		Channel_data[1] = analogRead(35)/2; // Pith E   map(analogRead(35), 0x00, 0xFFF, 0x00, 0xFFFF);
-		Channel_data[2] = analogRead(36);   // Throttle T   map(analogRead(36), 0x00, 0xFFF, 0x00, 0xFFFF); // 12bit to 16bit
-		Channel_data[3] = analogRead(39)/2; // Yaw R  map(analogRead(39), 0x00, 0xFFF, 0x00, 0xFFFF);
-
-		Channel_data[4] = 0;
-		Channel_data[5] = 0;
-		Channel_data[6] = 0;
-		Channel_data[7] = 0;
-		Channel_data[8] = 0;
-		Channel_data[9] = 0;
-		Channel_data[10] = 0;
-
-		Channel_data[11] = 1023;
-		Channel_data[12] = 1023;
-		Channel_data[13] = 127;
-		Channel_data[14] = 255;
-		Channel_data[15] = 511;
+	#ifdef USE_INT_ADC // 12 bit ESP32 ADC
+		Channel_data[0] = analogRead(34)>>1; // Roll A  map(analogRead(34), 0x00, 0xFFF, 0x00, 0xFFFF);
+		Channel_data[1] = analogRead(35)>>1; // Pith E  map(analogRead(35), 0x00, 0xFFF, 0x00, 0xFFFF);
+		Channel_data[2] = analogRead(36);    // Thro T  map(analogRead(36), 0x00, 0xFFF, 0x00, 0xFFFF); // 12bit to 16bit
+		Channel_data[3] = analogRead(39)>>1; // Yaw  R  map(analogRead(39), 0x00, 0xFFF, 0x00, 0xFFFF);
+	#else
+		Channel_data[0] = 1023; // Roll A
+		Channel_data[1] = 1023; // Pith E
+		Channel_data[2] = 1023; // Thro T
+		Channel_data[3] = 1023; // Yaw  R
 	#endif
 
-	#ifdef USE_EXT_ADC
-		// adc.readADC(0);
-		// for (int chan = 4; chan < 12; chan++) {
-		// 	//Channel_data[chan] = map(adc.readADC(chan), 0x00, 0x3FF, 0x00, 0xFFFF);
-		// }
+	Channel_data[ 4] = 0; // aux 1
+	Channel_data[ 5] = 0; // aux 2
+	Channel_data[ 6] = 0; // aux 3
+	Channel_data[ 7] = 0; // aux 4
+
+	#ifdef USE_EXT_ADC // 10bit MCP3008
+		for (int chan = 8; chan < 16; chan++)
+			Channel_data[chan] = map(adc.readADC(chan), 0x00, 0x3FF, 0x00, 0xFFFF);
+	#else
+		for (int chan = 8; chan < 16; chan++)
+			Channel_data[chan] = 0;
 	#endif
 
-	#ifdef PRINT_ADC
-		for (int i=0;i<16;i++) {
+	#ifdef ADC_SERIAL_OUTPUT
+		for (int i=0;i<16;i++)
 			Serial.printf("%d\t", Channel_data[i]);
-		}
 		Serial.print("\n");
 	#endif
 
-	#if defined(USE_RADIO) && defined(RADIO_SEND)
-		// radio_send();
+	#if defined(USE_WIFI) && defined(WIFI_SEND)
+		if(connected){
+			udp.beginPacket(udpAddress, udpPort);
+				udp.write((uint8_t *)Channel_data, PAYLOAD_SIZE);
+			udp.endPacket();
+		}
 	#endif
 
-	#ifdef USE_WIFI
-		// if(connected){
-		// 	udp.beginPacket(u	dpAddress, udpPort);
-		// 		udp.write((uint8_t *)Channel_data, PAYLOAD_SIZE);
-		// 	udp.endPacket();
-		// }
-	#endif
-
-	// adc.readADC(0);
-
-	// delay(BAYANG_callback()/1000.0);
-	TX_MAIN_PAUSE_on;
-
-	// delay(ReadFrSky_2way()/1000.0);
-	delay(ReadDsm() / 1000.0);
-
-	TX_MAIN_PAUSE_off;
-
-	// update_tft();
 	#ifdef USE_LED
 		// leds.setPixelColor(0, Wheel(color++));
 		// leds.show();
 	#endif
-	// delay(8);
+
+
+	#ifdef USE_TFT
+		update_tft();
+	#endif
+
+	TX_MAIN_PAUSE_on;
+
+	// delay(BAYANG_callback()/1000.0);
+	// delay(ReadFrSky_2way()/1000.0);
+	delay(ReadDsm() / 1000.0);
+
+	TX_MAIN_PAUSE_off;
 }
 
 #ifdef USE_WIFI
