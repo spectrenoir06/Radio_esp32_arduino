@@ -267,7 +267,7 @@ void setup() {
 
 	#ifdef USE_LED
 		leds.begin();
-		leds.setBrightness(64);
+		leds.setBrightness(20);
 		leds.setPixelColor(0, leds.Color(0,0,0));
 		leds.show();
 		Serial.println("USE_LED");
@@ -429,7 +429,7 @@ void loop() {
 	#endif
 
 	#ifdef USE_LED
-		// leds.setPixelColor(0, Wheel(color++));
+		// leds.setPixelColor(0, Wheel(map(Channel_data[2], 0x00, 0xFFF, 0x00, 0xFF)));
 		// leds.show();
 	#endif
 

@@ -25,7 +25,7 @@
 
 // --------------------------------
 
-#define ADC_SERIAL_OUTPUT
+// #define ADC_SERIAL_OUTPUT
 // #define WIFI_SEND
 
 // #define TELEMETRY
