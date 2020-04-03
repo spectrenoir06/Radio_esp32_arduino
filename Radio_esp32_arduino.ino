@@ -228,6 +228,7 @@ void modules_reset()
 
 void setup() {
 	Serial.begin(115200);
+	SPI.begin();
 
 	pinMode(TFT_CSN_pin, OUTPUT);
 	pinMode(TOUCH_CSN_pin, OUTPUT);
@@ -251,9 +252,9 @@ void setup() {
 	MProtocol_id = RX_num + MProtocol_id_master;
 
 	// PE1_off; PE2_off; // A7105
-	// PE1_on; PE2_off;  // NRF24
+	PE1_on; PE2_off;  // NRF24
 	// PE1_off; PE2_on;  // CC2500
-	PE1_on; PE2_on;   // CYRF6936
+	// PE1_on; PE2_on;   // CYRF6936
 
 
 	A7105_CSN_on;
@@ -311,7 +312,7 @@ void setup() {
 	#ifdef USE_TFT
 		Serial.println("USE_TFT");
 		tft.begin();
-		tft.setRotation(1); // v3 = 3
+		tft.setRotation(3); // v3 = 3
 		tft.fillScreen(ILI9341_BLACK);
 		tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
 		tft.setTextSize(FONT_SIZE);
@@ -328,9 +329,10 @@ void setup() {
 	modules_reset();
 	delay(500);
 
-	// sub_protocol = H8S3D ;initBAYANG();
+	sub_protocol = H8S3D ;initBAYANG();
 	// delay(initFrSky_2way()/1000.0);
-	protocol = PROTO_DSM; sub_protocol = DSM2_22; delay(initDsm()/1000.0);
+	// protocol = PROTO_DSM; sub_protocol = DSM2_22; delay(initDsm()/1000.0);
+	delay(5);
 }
 
 uint8_t color = 0;
@@ -390,10 +392,10 @@ uint8_t color = 0;
 void loop() {
 
 	#ifdef USE_INT_ADC // 12 bit ESP32 ADC
-		Channel_data[0] = analogRead(34)>>1; // Roll A  map(analogRead(34), 0x00, 0xFFF, 0x00, 0xFFFF);
-		Channel_data[1] = analogRead(35)>>1; // Pith E  map(analogRead(35), 0x00, 0xFFF, 0x00, 0xFFFF);
-		Channel_data[2] = analogRead(36);    // Thro T  map(analogRead(36), 0x00, 0xFFF, 0x00, 0xFFFF); // 12bit to 16bit
-		Channel_data[3] = analogRead(39)>>1; // Yaw  R  map(analogRead(39), 0x00, 0xFFF, 0x00, 0xFFFF);
+		Channel_data[0] = analogRead(36)>>2; // Roll A  map(analogRead(34), 0x00, 0xFFF, 0x00, 0xFFFF);
+		Channel_data[1] = analogRead(39)>>2; // Pith E  map(analogRead(35), 0x00, 0xFFF, 0x00, 0xFFFF);
+		Channel_data[2] = analogRead(34)>>2;    // Thro T  map(analogRead(36), 0x00, 0xFFF, 0x00, 0xFFFF); // 12bit to 16bit
+		Channel_data[3] = analogRead(35)>>2; // Yaw  R  map(analogRead(39), 0x00, 0xFFF, 0x00, 0xFFFF);
 	#else
 		Channel_data[0] = 1023; // Roll A
 		Channel_data[1] = 1023; // Pith E
@@ -440,9 +442,9 @@ void loop() {
 
 	TX_MAIN_PAUSE_on;
 
-	// delay(BAYANG_callback()/1000.0);
+	delay(BAYANG_callback()/1000.0);
 	// delay(ReadFrSky_2way()/1000.0);
-	delay(ReadDsm() / 1000.0);
+	// delay(ReadDsm() / 1000.0);
 
 	TX_MAIN_PAUSE_off;
 }

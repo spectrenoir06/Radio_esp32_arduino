@@ -274,8 +274,7 @@ uint16_t BAYANG_callback()
 			}
 			else
 		#endif
-				packet_count%=2;
-		Serial.println("send data");
+		packet_count%=2;
 	}
 	else
 	{

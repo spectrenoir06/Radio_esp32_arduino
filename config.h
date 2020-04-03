@@ -19,7 +19,7 @@
 
 #define PRINT_ADC
 #define PRINT_TS
-// #define PRINT_RADIO
+#define PRINT_RADIO
 #define PRINT_SD
 #define PRINT_WIFI
 
