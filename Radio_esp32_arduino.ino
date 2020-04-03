@@ -252,8 +252,8 @@ void setup() {
 	MProtocol_id = RX_num + MProtocol_id_master;
 
 	// PE1_off; PE2_off; // A7105
-	PE1_on; PE2_off;  // NRF24
-	// PE1_off; PE2_on;  // CC2500
+	// PE1_on; PE2_off;  // NRF24
+	PE1_off; PE2_on;  // CC2500
 	// PE1_on; PE2_on;   // CYRF6936
 
 
@@ -264,6 +264,9 @@ void setup() {
 	CYRF_RST_HI; //reset cyrf
 
 	BIND_IN_PROGRESS;		// Request bind
+
+	analogReadResolution(10);             // Sets the sample bits and read resolution, default is 12-bit (0 - 4095), range is 9 - 12 bits
+	analogSetWidth(10);                   // Sets the sample bits and read resolution, default is 12-bit (0 - 4095), range is 9 - 12 bits
 
 
 	#ifdef USE_LED
@@ -329,8 +332,8 @@ void setup() {
 	modules_reset();
 	delay(500);
 
-	sub_protocol = H8S3D ;initBAYANG();
-	// delay(initFrSky_2way()/1000.0);
+	// sub_protocol = H8S3D ;initBAYANG();
+	delay(initFrSky_2way()/1000.0);
 	// protocol = PROTO_DSM; sub_protocol = DSM2_22; delay(initDsm()/1000.0);
 	delay(5);
 }
@@ -392,10 +395,16 @@ uint8_t color = 0;
 void loop() {
 
 	#ifdef USE_INT_ADC // 12 bit ESP32 ADC
-		Channel_data[0] = analogRead(36)>>2; // Roll A  map(analogRead(34), 0x00, 0xFFF, 0x00, 0xFFFF);
-		Channel_data[1] = analogRead(39)>>2; // Pith E  map(analogRead(35), 0x00, 0xFFF, 0x00, 0xFFFF);
-		Channel_data[2] = analogRead(34)>>2;    // Thro T  map(analogRead(36), 0x00, 0xFFF, 0x00, 0xFFFF); // 12bit to 16bit
-		Channel_data[3] = analogRead(35)>>2; // Yaw  R  map(analogRead(39), 0x00, 0xFFF, 0x00, 0xFFFF);
+		// Channel_data[0] = analogRead(36)>>2; // Roll A  map(analogRead(34), 0x00, 0xFFF, 0x00, 0xFFFF);
+		// Channel_data[1] = analogRead(39)>>2; // Pith E  map(analogRead(35), 0x00, 0xFFF, 0x00, 0xFFFF);
+		// Channel_data[2] = analogRead(34)>>2;    // Thro T  map(analogRead(36), 0x00, 0xFFF, 0x00, 0xFFFF); // 12bit to 16bit
+		// Channel_data[3] = analogRead(35)>>2; // Yaw  R  map(analogRead(39), 0x00, 0xFFF, 0x00, 0xFFFF);
+
+		Channel_data[0] = analogRead(34);//analogRead(34)/2; // Roll A  map(analogRead(34), 0x00, 0xFFF, 0x00, 0xFFFF);
+		Channel_data[1] = analogRead(35);// analogRead(35)/2; // Pith E  map(analogRead(35), 0x00, 0xFFF, 0x00, 0xFFFF);
+		Channel_data[2] = analogRead(36);//analogRead(36)/2;    // Thro T  map(analogRead(36), 0x00, 0xFFF, 0x00, 0xFFFF); // 12bit to 16bit
+		Channel_data[3] = analogRead(39);//analogRead(39)/2; // Yaw  R  map(analogRead(39), 0x00, 0xFFF, 0x00, 0xFFFF);
+
 	#else
 		Channel_data[0] = 1023; // Roll A
 		Channel_data[1] = 1023; // Pith E
@@ -403,10 +412,18 @@ void loop() {
 		Channel_data[3] = 1023; // Yaw  R
 	#endif
 
-	Channel_data[ 4] = 0; // aux 1
-	Channel_data[ 5] = 0; // aux 2
-	Channel_data[ 6] = 0; // aux 3
-	Channel_data[ 7] = 0; // aux 4
+	Channel_data[ 4] = 1000; // aux 1
+	Channel_data[ 5] = 1000; // aux 2
+	Channel_data[ 6] = 1000; // aux 3
+	Channel_data[ 7] = 1000; // aux 4
+
+	for (int i = 0; i < 5; i++) {
+		if (Channel_data[i] >= 512) {
+			Channel_data[i] = (map(Channel_data[i], 512, 1023, 1500, 2000));
+		} else {
+			Channel_data[i] = (map(Channel_data[i], 0, 511, 1000, 1499));
+		}
+	}
 
 	#ifdef USE_EXT_ADC // 10bit MCP3008
 		for (int chan = 8; chan < 16; chan++)
@@ -442,8 +459,8 @@ void loop() {
 
 	TX_MAIN_PAUSE_on;
 
-	delay(BAYANG_callback()/1000.0);
-	// delay(ReadFrSky_2way()/1000.0);
+	// delay(BAYANG_callback()/1000.0);
+	delay(ReadFrSky_2way()/1000.0);
 	// delay(ReadDsm() / 1000.0);
 
 	TX_MAIN_PAUSE_off;
