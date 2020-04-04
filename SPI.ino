@@ -1,16 +1,16 @@
-void SPI_Write(uint8_t command) {
-	SPI.beginTransaction(SPISettings(2000000, MSBFIRST, SPI_MODE0));
-	SPI.write(command);
-	SPI.endTransaction();
-}
-
-uint8_t SPI_Read(void) {
-	uint8_t result=0;
-	SPI.beginTransaction(SPISettings(2000000, MSBFIRST, SPI_MODE0));
-	result = _SPI.transfer(0xff);
-	SPI.endTransaction();
-	return result;
-}
+// void SPI_Write(uint8_t command) {
+// 	SPI.beginTransaction(SPISettings(2000000, MSBFIRST, SPI_MODE0));
+// 	SPI.write(command);
+// 	SPI.endTransaction();
+// }
+//
+// uint8_t SPI_Read(void) {
+// 	uint8_t result=0;
+// 	SPI.beginTransaction(SPISettings(2000000, MSBFIRST, SPI_MODE0));
+// 	result = _SPI.transfer(0xff);
+// 	SPI.endTransaction();
+// 	return result;
+// }
 
 // #ifdef A7105_INSTALLED
 // uint8_t SPI_SDI_Read(void)

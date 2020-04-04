@@ -22,6 +22,8 @@
 #define PE1_pin			13
 #define PE2_pin			12
 
+#define BTN1_pin		25
+#define BTN2_pin		26
 
 #define	PE1_on  		digitalWrite(PE1_pin,HIGH)
 #define	PE1_off		 	digitalWrite(PE1_pin,LOW)

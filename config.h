@@ -5,9 +5,9 @@
 #define USE_ADC
 // #define USE_WIFI
 
-#define NRF24L01_INSTALLED
+// #define NRF24L01_INSTALLED
 #define CC2500_INSTALLED
-#define CYRF6936_INSTALLED
+// #define CYRF6936_INSTALLED
 
 
 // #define USE_RADIO
@@ -17,22 +17,22 @@
 
 // -------- TFT display ------------
 
-#define PRINT_ADC
-#define PRINT_TS
-#define PRINT_RADIO
-#define PRINT_SD
-#define PRINT_WIFI
+// #define PRINT_ADC
+// #define PRINT_TS
+// #define PRINT_RADIO
+// #define PRINT_SD
+// #define PRINT_WIFI
 
 // --------------------------------
 
-// #define ADC_SERIAL_OUTPUT
+#define ADC_SERIAL_OUTPUT
 // #define WIFI_SEND
 
 // #define TELEMETRY
 
-#define	BAYANG_NRF24L01_INO
+// #define	BAYANG_NRF24L01_INO
 #define	FRSKYD_CC2500_INO
-#define	DSM_CYRF6936_INO
+// #define	DSM_CYRF6936_INO
 // #define	FRSKYX_CC2500_INO
 // #define DSM_TELEMETRY
 

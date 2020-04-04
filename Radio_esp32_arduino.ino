@@ -228,6 +228,7 @@ void modules_reset()
 
 void setup() {
 	Serial.begin(115200);
+	SPI.setFrequency(5000000);
 	SPI.begin();
 
 	pinMode(TFT_CSN_pin, OUTPUT);
@@ -249,6 +250,9 @@ void setup() {
 	digitalWrite(ADC_CSN_pin, HIGH);
 	digitalWrite(SD_CSN_pin, HIGH);
 
+	pinMode(BTN1_pin, INPUT_PULLUP);
+	pinMode(BTN2_pin, INPUT_PULLUP);
+
 	MProtocol_id = RX_num + MProtocol_id_master;
 
 	// PE1_off; PE2_off; // A7105
@@ -265,13 +269,13 @@ void setup() {
 
 	BIND_IN_PROGRESS;		// Request bind
 
-	analogReadResolution(10);             // Sets the sample bits and read resolution, default is 12-bit (0 - 4095), range is 9 - 12 bits
-	analogSetWidth(10);                   // Sets the sample bits and read resolution, default is 12-bit (0 - 4095), range is 9 - 12 bits
+	analogReadResolution(11);             // Sets the sample bits and read resolution, default is 12-bit (0 - 4095), range is 9 - 12 bits
+	analogSetWidth(11);                   // Sets the sample bits and read resolution, default is 12-bit (0 - 4095), range is 9 - 12 bits
 
 
 	#ifdef USE_LED
 		leds.begin();
-		leds.setBrightness(20);
+		leds.setBrightness(50);
 		leds.setPixelColor(0, leds.Color(0,0,0));
 		leds.show();
 		Serial.println("USE_LED");
@@ -330,15 +334,17 @@ void setup() {
 	#endif
 
 	modules_reset();
-	delay(500);
+	// delay(500);
 
 	// sub_protocol = H8S3D ;initBAYANG();
 	delay(initFrSky_2way()/1000.0);
 	// protocol = PROTO_DSM; sub_protocol = DSM2_22; delay(initDsm()/1000.0);
-	delay(5);
+	// delay(5);
 }
 
 uint8_t color = 0;
+uint8_t btn1_press = 0;
+uint8_t btn2_press = 0;
 
 #ifdef USE_TFT
 	void update_tft() {
@@ -394,17 +400,11 @@ uint8_t color = 0;
 
 void loop() {
 
-	#ifdef USE_INT_ADC // 12 bit ESP32 ADC
-		// Channel_data[0] = analogRead(36)>>2; // Roll A  map(analogRead(34), 0x00, 0xFFF, 0x00, 0xFFFF);
-		// Channel_data[1] = analogRead(39)>>2; // Pith E  map(analogRead(35), 0x00, 0xFFF, 0x00, 0xFFFF);
-		// Channel_data[2] = analogRead(34)>>2;    // Thro T  map(analogRead(36), 0x00, 0xFFF, 0x00, 0xFFFF); // 12bit to 16bit
-		// Channel_data[3] = analogRead(35)>>2; // Yaw  R  map(analogRead(39), 0x00, 0xFFF, 0x00, 0xFFFF);
-
-		Channel_data[0] = analogRead(34);//analogRead(34)/2; // Roll A  map(analogRead(34), 0x00, 0xFFF, 0x00, 0xFFFF);
-		Channel_data[1] = analogRead(35);// analogRead(35)/2; // Pith E  map(analogRead(35), 0x00, 0xFFF, 0x00, 0xFFFF);
-		Channel_data[2] = analogRead(36);//analogRead(36)/2;    // Thro T  map(analogRead(36), 0x00, 0xFFF, 0x00, 0xFFFF); // 12bit to 16bit
-		Channel_data[3] = analogRead(39);//analogRead(39)/2; // Yaw  R  map(analogRead(39), 0x00, 0xFFF, 0x00, 0xFFFF);
-
+	#ifdef USE_INT_ADC
+		Channel_data[0] = map16b(analogRead(34), 0, 2047, CHANNEL_MIN_100, CHANNEL_MAX_100); // Roll A
+		Channel_data[1] = map16b(analogRead(35), 0, 2047, CHANNEL_MIN_100, CHANNEL_MAX_100); // Pith E
+		Channel_data[2] = map16b(analogRead(36), 0, 2047, CHANNEL_MIN_100, CHANNEL_MAX_100); // Thro T
+		Channel_data[3] = map16b(analogRead(39), 0, 2047, CHANNEL_MIN_100, CHANNEL_MAX_100); // Yaw  R
 	#else
 		Channel_data[0] = 1023; // Roll A
 		Channel_data[1] = 1023; // Pith E
@@ -412,18 +412,34 @@ void loop() {
 		Channel_data[3] = 1023; // Yaw  R
 	#endif
 
-	Channel_data[ 4] = 1000; // aux 1
-	Channel_data[ 5] = 1000; // aux 2
-	Channel_data[ 6] = 1000; // aux 3
-	Channel_data[ 7] = 1000; // aux 4
-
-	for (int i = 0; i < 5; i++) {
-		if (Channel_data[i] >= 512) {
-			Channel_data[i] = (map(Channel_data[i], 512, 1023, 1500, 2000));
-		} else {
-			Channel_data[i] = (map(Channel_data[i], 0, 511, 1000, 1499));
+	if (digitalRead(BTN1_pin) == 0) {
+		if (btn1_press == 0) {
+			Channel_data[ 4] = Channel_data[ 4] < 1500 ? CHANNEL_MAX_100 : CHANNEL_MIN_100; // aux 1
+			btn1_press = 1;
 		}
-	}
+	} else
+		btn1_press = 0;
+
+	if (digitalRead(BTN2_pin) == 0) {
+		if (btn2_press == 0) {
+			Channel_data[ 5] = Channel_data[ 5] < 1500 ? CHANNEL_MAX_100 : CHANNEL_MIN_100; // aux 2
+			btn2_press = 1;
+		}
+	} else
+		btn2_press = 0;
+
+	// Channel_data[ 4] = CHANNEL_MIN_100; // aux 1
+	// Channel_data[ 5] = CHANNEL_MIN_100; // aux 2
+	Channel_data[ 6] = CHANNEL_MIN_100; // aux 3
+	Channel_data[ 7] = CHANNEL_MIN_100; // aux 4
+
+	// for (int i = 0; i < 5; i++) {
+	// 	if (Channel_data[i] >= 512) {
+	// 		Channel_data[i] = (map(Channel_data[i], 512, 1023, 1500, 2000));
+	// 	} else {
+	// 		Channel_data[i] = (map(Channel_data[i], 0, 511, 1000, 1499));
+	// 	}
+	// }
 
 	#ifdef USE_EXT_ADC // 10bit MCP3008
 		for (int chan = 8; chan < 16; chan++)
@@ -448,8 +464,11 @@ void loop() {
 	#endif
 
 	#ifdef USE_LED
-		// leds.setPixelColor(0, Wheel(map(Channel_data[2], 0x00, 0xFFF, 0x00, 0xFF)));
-		// leds.show();
+		if (Channel_data[4] > 1500)
+			leds.setPixelColor(0, leds.Color(255,0,0));
+		else
+			leds.setPixelColor(0, Wheel(map(Channel_data[2], CHANNEL_MIN_100, CHANNEL_MAX_100, 0x00, 0xFF)));
+		leds.show();
 	#endif
 
 
