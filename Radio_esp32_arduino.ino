@@ -31,11 +31,16 @@
 
 // #include "audio.hpp"
 
+#ifdef USE_BLE
+#include <BleGamepad.h>
+	BleGamepad bleGamepad("Multiprotocol TX", "Spectre", 100);
+#endif
+
 #define PAYLOAD_SIZE 32
 
 //Global constants/variables
 uint32_t MProtocol_id;//tx id,
-uint32_t MProtocol_id_master = 0x42;
+uint32_t MProtocol_id_master;
 uint32_t blink=0,last_signal=0;
 uint8_t calData[48];
 #define MAX_PKT 29
@@ -253,7 +258,9 @@ void setup() {
 	pinMode(BTN1_pin, INPUT_PULLUP);
 	pinMode(BTN2_pin, INPUT_PULLUP);
 
+	MProtocol_id_master = ESP.getEfuseMac();
 	MProtocol_id = RX_num + MProtocol_id_master;
+	set_rx_tx_addr(MProtocol_id);
 
 	// PE1_off; PE2_off; // A7105
 	// PE1_on; PE2_off;  // NRF24
@@ -267,11 +274,8 @@ void setup() {
 	CYRF_CSN_on;
 	CYRF_RST_HI; //reset cyrf
 
-	BIND_IN_PROGRESS;		// Request bind
-
 	analogReadResolution(11);             // Sets the sample bits and read resolution, default is 12-bit (0 - 4095), range is 9 - 12 bits
 	analogSetWidth(11);                   // Sets the sample bits and read resolution, default is 12-bit (0 - 4095), range is 9 - 12 bits
-
 
 	#ifdef USE_LED
 		leds.begin();
@@ -285,6 +289,10 @@ void setup() {
 		adc.begin(ADC_CSN_pin);
 		Serial.println("USE_EXT_ADC");
 	#endif
+
+	for(uint8_t i=0; i< 16; i++) {
+		Channel_data[i] = CHANNEL_MIN_100;
+	}
 
 	#ifdef USE_SD
 		Serial.println("USE_SD");
@@ -333,11 +341,23 @@ void setup() {
 		WiFi.begin(networkName, networkPswd);
 	#endif
 
+	#ifdef USE_BLE
+		Serial.println("Starting BLE work!");
+		bleGamepad.begin();
+	#endif
+
 	modules_reset();
 	// delay(500);
 
+	StartFrskyD();
+
+	if (digitalRead(BTN1_pin) == 0)
+		BIND_IN_PROGRESS;		// Request bind
+	else
+		BIND_DONE;
+
 	// sub_protocol = H8S3D ;initBAYANG();
-	delay(initFrSky_2way()/1000.0);
+	// delay(initFrSky_2way()/1000.0);
 	// protocol = PROTO_DSM; sub_protocol = DSM2_22; delay(initDsm()/1000.0);
 	// delay(5);
 }
@@ -355,7 +375,7 @@ uint8_t btn2_press = 0;
 		#if defined(PRINT_ADC)
 			tft.print("\nADC inputs: \n");
 			for (int chan=0;chan,chan<16;chan++) {
-				tft.printf("  [%02d] = %04x [%02d%%]\n", chan, Channel_data[chan], map(Channel_data[chan],0x0000, 0xFFFF, 0, 99));
+				tft.printf("  [%02d] = %04d [%03d%%]\n", chan, Channel_data[chan], map(Channel_data[chan],CHANNEL_MIN_100, CHANNEL_MAX_100, 0, 100));
 			}
 		#endif
 
@@ -446,7 +466,7 @@ void loop() {
 			Channel_data[chan] = map(adc.readADC(chan), 0x00, 0x3FF, 0x00, 0xFFFF);
 	#else
 		for (int chan = 8; chan < 16; chan++)
-			Channel_data[chan] = 0;
+			Channel_data[chan] = CHANNEL_MIN_100;
 	#endif
 
 	#ifdef ADC_SERIAL_OUTPUT
@@ -467,7 +487,8 @@ void loop() {
 		if (Channel_data[4] > 1500)
 			leds.setPixelColor(0, leds.Color(255,0,0));
 		else
-			leds.setPixelColor(0, Wheel(map(Channel_data[2], CHANNEL_MIN_100, CHANNEL_MAX_100, 0x00, 0xFF)));
+			leds.setPixelColor(0, leds.Color(0,255,0));
+			// leds.setPixelColor(0, Wheel(map(Channel_data[2], CHANNEL_MIN_100, CHANNEL_MAX_100, 0x00, 0xFF)));
 		leds.show();
 	#endif
 
@@ -476,13 +497,29 @@ void loop() {
 		update_tft();
 	#endif
 
-	TX_MAIN_PAUSE_on;
+	#ifdef USE_BLE
+		bleGamepad.setAxes(
+			map(Channel_data[0],CHANNEL_MIN_100,CHANNEL_MAX_100, -127, 127),
+			map(Channel_data[1],CHANNEL_MIN_100,CHANNEL_MAX_100, -127, 127),
+			map(Channel_data[2],CHANNEL_MIN_100,CHANNEL_MAX_100, -127, 127),
+			map(Channel_data[3],CHANNEL_MIN_100,CHANNEL_MAX_100, -127, 127),
+			map(Channel_data[4],CHANNEL_MIN_100,CHANNEL_MAX_100, -127, 127),
+			map(Channel_data[5],CHANNEL_MIN_100,CHANNEL_MAX_100, -127, 127),
+			DPAD_CENTERED
+		);
+		delay(30);
+	#endif
+
+	// TX_MAIN_PAUSE_on;
 
 	// delay(BAYANG_callback()/1000.0);
-	delay(ReadFrSky_2way()/1000.0);
+	// delay(ReadFrSky_2way()/1000.0);
+
+	//Serial.printf("%d,\t%d,\t%d,\t%d,\t%d,\n",telemetry_link,TX_RSSI,TX_LQI,packet_count,state);
+
 	// delay(ReadDsm() / 1000.0);
 
-	TX_MAIN_PAUSE_off;
+	// TX_MAIN_PAUSE_off;
 }
 
 #ifdef USE_WIFI

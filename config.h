@@ -4,6 +4,7 @@
 // #define USE_TS
 #define USE_ADC
 // #define USE_WIFI
+#define USE_BLE
 
 // #define NRF24L01_INSTALLED
 #define CC2500_INSTALLED
@@ -17,7 +18,7 @@
 
 // -------- TFT display ------------
 
-// #define PRINT_ADC
+#define PRINT_ADC
 // #define PRINT_TS
 // #define PRINT_RADIO
 // #define PRINT_SD
@@ -25,10 +26,10 @@
 
 // --------------------------------
 
-#define ADC_SERIAL_OUTPUT
+// #define ADC_SERIAL_OUTPUT
 // #define WIFI_SEND
 
-// #define TELEMETRY
+#define TELEMETRY
 
 // #define	BAYANG_NRF24L01_INO
 #define	FRSKYD_CC2500_INO

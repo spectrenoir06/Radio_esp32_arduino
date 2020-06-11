@@ -48,10 +48,11 @@ static void __attribute__((unused)) frsky2way_data_frame()
 	packet[1] = rx_tx_addr[3];
 	packet[2] = rx_tx_addr[2];
 	packet[3] = counter;//
+
 	#if defined TELEMETRY
-	packet[4] = telemetry_counter;
+		packet[4] = telemetry_counter;
 	#else
-	packet[4] = 0x00;
+		packet[4] = 0x00;
 	#endif
 
 	packet[5] = 0x01;
@@ -82,7 +83,7 @@ uint16_t initFrSky_2way()
 	Frsky_init_hop();
 	packet_count = 0;
 	#if defined TELEMETRY
-	init_frskyd_link_telemetry();
+		init_frskyd_link_telemetry();
 	#endif
 	if (IS_BIND_IN_PROGRESS)
 	{
@@ -107,9 +108,9 @@ uint16_t ReadFrSky_2way()
 		CC2500_Strobe(CC2500_SFRX);//0x3A
 		CC2500_WriteData(packet, packet[0] + 1);
 		if (IS_BIND_DONE)
-		state = FRSKY_BIND_DONE;
+			state = FRSKY_BIND_DONE;
 		else
-		state++;
+			state++;
 		return 9000;
 	}
 	if (state == FRSKY_BIND_DONE)
@@ -144,11 +145,11 @@ uint16_t ReadFrSky_2way()
 			{
 				CC2500_ReadData(pkt, len);        //received telemetry packets
 				#if defined(TELEMETRY)
-				if (pkt[len - 1] & 0x80)
-				{ //with valid crc
-					packet_count = 0;
-					frsky_check_telemetry(pkt, len); //check if valid telemetry packets and buffer them.
-				}
+					if (pkt[len - 1] & 0x80)
+					{ //with valid crc
+						packet_count = 0;
+						frsky_check_telemetry(pkt, len); //check if valid telemetry packets and buffer them.
+					}
 				#endif
 			}
 			else
@@ -159,8 +160,8 @@ uint16_t ReadFrSky_2way()
 				{ //~1sec
 					packet_count = 0;
 					#if defined TELEMETRY
-					telemetry_link = 0; //no link frames
-					pkt[6] = 0; //no user frames.
+						telemetry_link = 0; //no link frames
+						pkt[6] = 0; //no user frames.
 					#endif
 				}
 			}

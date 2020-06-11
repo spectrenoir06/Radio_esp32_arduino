@@ -263,87 +263,88 @@ void frsky_check_telemetry(uint8_t *pkt,uint8_t len)
 		else
 			pktt[6]=0; 									// Discard packet
 		//
-#if defined SPORT_TELEMETRY && defined FRSKYX_CC2500_INO
-		telemetry_lost=0;
-		if (protocol==PROTO_FRSKYX)
-		{
-			uint16_t lcrc = frskyX_crc_x(&pkt[3], len-7 ) ;
 
-			if ( ( (lcrc >> 8) == pkt[len-4]) && ( (lcrc & 0x00FF ) == pkt[len-3]) )
+		#if defined SPORT_TELEMETRY && defined FRSKYX_CC2500_INO
+			telemetry_lost=0;
+			if (protocol==PROTO_FRSKYX)
 			{
-				// Check if in sequence
-				if ( (pkt[5] & 0x0F) == 0x08 )
+				uint16_t lcrc = frskyX_crc_x(&pkt[3], len-7 ) ;
+
+				if ( ( (lcrc >> 8) == pkt[len-4]) && ( (lcrc & 0x00FF ) == pkt[len-3]) )
 				{
-					FrX_receive_seq = 0x08 ;
-					NextFxFrameToForward = 0 ;
-					FrskyxRxFrames[0].valid = 0 ;
-					FrskyxRxFrames[1].valid = 0 ;
-					FrskyxRxFrames[2].valid = 0 ;
-					FrskyxRxFrames[3].valid = 0 ;
-				}
-				else if ( (pkt[5] & 0x03) == (FrX_receive_seq & 0x03 ) )
-				{
-					// OK to process
-					struct t_fx_rx_frame *p ;
-					uint8_t count ;
-					p = &FrskyxRxFrames[FrX_receive_seq & 3] ;
-					count = pkt[6] ;
-					if ( count <= 6 )
+					// Check if in sequence
+					if ( (pkt[5] & 0x0F) == 0x08 )
 					{
-						p->count = count ;
-						for ( uint8_t i = 0 ; i < count ; i += 1 )
-							p->payload[i] = pkt[i+7] ;
+						FrX_receive_seq = 0x08 ;
+						NextFxFrameToForward = 0 ;
+						FrskyxRxFrames[0].valid = 0 ;
+						FrskyxRxFrames[1].valid = 0 ;
+						FrskyxRxFrames[2].valid = 0 ;
+						FrskyxRxFrames[3].valid = 0 ;
 					}
-					else
-						p->count = 0 ;
-					p->valid = 1 ;
-
-					FrX_receive_seq = ( FrX_receive_seq + 1 ) & 0x03 ;
-
-					if ( FrskyxRxTelemetryValidSequence & 0x80 )
+					else if ( (pkt[5] & 0x03) == (FrX_receive_seq & 0x03 ) )
 					{
-						FrX_receive_seq = ( FrskyxRxTelemetryValidSequence + 1 ) & 3 ;
-						FrskyxRxTelemetryValidSequence &= 0x7F ;
-					}
-
-				}
-				else
-				{
-					// Save and request correct packet
-					struct t_fx_rx_frame *q ;
-					uint8_t count ;
-					// pkt[4] RSSI
-					// pkt[5] sequence control
-					// pkt[6] payload count
-					// pkt[7-12] payload
-					pktt[6] = 0 ; // Don't process
-					if ( (pkt[5] & 0x03) == ( ( FrX_receive_seq +1 ) & 3 ) )
-					{
-						q = &FrskyxRxFrames[(pkt[5] & 0x03)] ;
+						// OK to process
+						struct t_fx_rx_frame *p ;
+						uint8_t count ;
+						p = &FrskyxRxFrames[FrX_receive_seq & 3] ;
 						count = pkt[6] ;
 						if ( count <= 6 )
 						{
-							q->count = count ;
+							p->count = count ;
 							for ( uint8_t i = 0 ; i < count ; i += 1 )
-							{
-								q->payload[i] = pkt[i+7] ;
-							}
+								p->payload[i] = pkt[i+7] ;
 						}
 						else
-							q->count = 0 ;
-						q->valid = 1 ;
+							p->count = 0 ;
+						p->valid = 1 ;
 
-						FrskyxRxTelemetryValidSequence = 0x80 | ( pkt[5] & 0x03 ) ;
+						FrX_receive_seq = ( FrX_receive_seq + 1 ) & 0x03 ;
+
+						if ( FrskyxRxTelemetryValidSequence & 0x80 )
+						{
+							FrX_receive_seq = ( FrskyxRxTelemetryValidSequence + 1 ) & 3 ;
+							FrskyxRxTelemetryValidSequence &= 0x7F ;
+						}
+
+					}
+					else
+					{
+						// Save and request correct packet
+						struct t_fx_rx_frame *q ;
+						uint8_t count ;
+						// pkt[4] RSSI
+						// pkt[5] sequence control
+						// pkt[6] payload count
+						// pkt[7-12] payload
+						pktt[6] = 0 ; // Don't process
+						if ( (pkt[5] & 0x03) == ( ( FrX_receive_seq +1 ) & 3 ) )
+						{
+							q = &FrskyxRxFrames[(pkt[5] & 0x03)] ;
+							count = pkt[6] ;
+							if ( count <= 6 )
+							{
+								q->count = count ;
+								for ( uint8_t i = 0 ; i < count ; i += 1 )
+								{
+									q->payload[i] = pkt[i+7] ;
+								}
+							}
+							else
+								q->count = 0 ;
+							q->valid = 1 ;
+
+							FrskyxRxTelemetryValidSequence = 0x80 | ( pkt[5] & 0x03 ) ;
+						}
+
+						 FrX_receive_seq = ( FrX_receive_seq & 0x03 ) | 0x04 ;	// Request re-transmission
 					}
 
-					 FrX_receive_seq = ( FrX_receive_seq & 0x03 ) | 0x04 ;	// Request re-transmission
+					if (((pktt[5] >> 4) & 0x0f) == 0x08)
+						FrX_send_seq = 0 ;
 				}
-
-				if (((pktt[5] >> 4) & 0x0f) == 0x08)
-					FrX_send_seq = 0 ;
 			}
-		}
-#endif
+		#endif
 	}
 }
 

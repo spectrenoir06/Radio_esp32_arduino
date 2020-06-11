@@ -143,7 +143,7 @@ void Frsky_init_hop(void)
 /**  FrSky V, D and X routines  **/
 /******************************/
 #if defined(FRSKYV_CC2500_INO) || defined(FRSKYD_CC2500_INO) || defined(FRSKYX_CC2500_INO)
-	const PROGMEM uint8_t FRSKY_common_startreg_cc2500_conf[]= {
+	const uint8_t FRSKY_common_startreg_cc2500_conf[]= {
 		 CC2500_02_IOCFG0 ,
 		 CC2500_00_IOCFG2 ,
 		 CC2500_17_MCSM1 ,
@@ -165,7 +165,7 @@ void Frsky_init_hop(void)
 		 CC2500_15_DEVIATN  };
 
 	#if defined(FRSKYV_CC2500_INO)
-		const PROGMEM uint8_t FRSKYV_cc2500_conf[]= {
+		const uint8_t FRSKYV_cc2500_conf[]= {
 		/*02_IOCFG0*/  	 0x06 ,
 		/*00_IOCFG2*/  	 0x06 ,
 		/*17_MCSM1*/   	 0x0c ,
@@ -188,7 +188,7 @@ void Frsky_init_hop(void)
 	#endif
 
 	#if defined(FRSKYD_CC2500_INO)
-		const PROGMEM uint8_t FRSKYD_cc2500_conf[]= {
+		const uint8_t FRSKYD_cc2500_conf[]= {
 		/*02_IOCFG0*/  	 0x06 ,
 		/*00_IOCFG2*/  	 0x06 ,
 		/*17_MCSM1*/   	 0x0c ,
@@ -211,7 +211,7 @@ void Frsky_init_hop(void)
 	#endif
 
 	#if defined(FRSKYX_CC2500_INO)
-		const PROGMEM uint8_t FRSKYX_cc2500_conf[]= {
+		const uint8_t FRSKYX_cc2500_conf[]= {
 	//FRSKYX
 		/*02_IOCFG0*/  	 0x06 ,
 		/*00_IOCFG2*/  	 0x06 ,
@@ -232,7 +232,7 @@ void Frsky_init_hop(void)
 		/*13_MDMCFG1*/ 	 0x23 ,
 		/*14_MDMCFG0*/ 	 0x7a ,
 		/*15_DEVIATN*/ 	 0x51  };
-		const PROGMEM uint8_t FRSKYXEU_cc2500_conf[]= {
+		const uint8_t FRSKYXEU_cc2500_conf[]= {
 		/*02_IOCFG0*/  	 0x06 ,
 		/*00_IOCFG2*/  	 0x06 ,
 		/*17_MCSM1*/   	 0x0E ,
@@ -254,7 +254,7 @@ void Frsky_init_hop(void)
 		/*15_DEVIATN*/ 	 0x53  };
 	#endif
 
-	const PROGMEM uint8_t FRSKY_common_end_cc2500_conf[][2]= {
+	const uint8_t FRSKY_common_end_cc2500_conf[][2]= {
 		{ CC2500_19_FOCCFG,   0x16 },
 		{ CC2500_1A_BSCFG,    0x6c },
 		{ CC2500_1B_AGCCTRL2, 0x43 },
