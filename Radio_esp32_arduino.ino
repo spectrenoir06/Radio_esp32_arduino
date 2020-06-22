@@ -23,11 +23,14 @@
 
 #include "config.h"
 #include "TX_Def.h"
-#include "wifi_config.h"
 
-#include "GUIslice.h"
-#include "GUIslice_ex.h"
-#include "GUIslice_drv.h"
+#ifdef USE_WIFI
+	#include "wifi_config.h"
+#endif
+
+// #include "GUIslice.h"
+// #include "GUIslice_ex.h"
+// #include "GUIslice_drv.h"
 
 // #include "audio.hpp"
 
@@ -233,7 +236,7 @@ void modules_reset()
 
 void setup() {
 	Serial.begin(115200);
-	SPI.setFrequency(5000000);
+	// SPI.setFrequency(5000000);
 	SPI.begin();
 
 	pinMode(TFT_CSN_pin, OUTPUT);
@@ -262,11 +265,7 @@ void setup() {
 	MProtocol_id = RX_num + MProtocol_id_master;
 	set_rx_tx_addr(MProtocol_id);
 
-	// PE1_off; PE2_off; // A7105
-	// PE1_on; PE2_off;  // NRF24
-	PE1_off; PE2_on;  // CC2500
-	// PE1_on; PE2_on;   // CYRF6936
-
+	PE_SET; // config.h
 
 	A7105_CSN_on;
 	CC25_CSN_on;
@@ -349,17 +348,16 @@ void setup() {
 	modules_reset();
 	// delay(500);
 
-	StartFrskyD();
+	// StartFrskyD();
 
 	if (digitalRead(BTN1_pin) == 0)
 		BIND_IN_PROGRESS;		// Request bind
 	else
 		BIND_DONE;
 
-	// sub_protocol = H8S3D ;initBAYANG();
-	// delay(initFrSky_2way()/1000.0);
-	// protocol = PROTO_DSM; sub_protocol = DSM2_22; delay(initDsm()/1000.0);
-	// delay(5);
+	INIT_RF; // config.h
+
+	delay(5);
 }
 
 uint8_t color = 0;
@@ -421,10 +419,16 @@ uint8_t btn2_press = 0;
 void loop() {
 
 	#ifdef USE_INT_ADC
-		Channel_data[0] = map16b(analogRead(34), 0, 2047, CHANNEL_MIN_100, CHANNEL_MAX_100); // Roll A
-		Channel_data[1] = map16b(analogRead(35), 0, 2047, CHANNEL_MIN_100, CHANNEL_MAX_100); // Pith E
-		Channel_data[2] = map16b(analogRead(36), 0, 2047, CHANNEL_MIN_100, CHANNEL_MAX_100); // Thro T
-		Channel_data[3] = map16b(analogRead(39), 0, 2047, CHANNEL_MIN_100, CHANNEL_MAX_100); // Yaw  R
+		// Channel_data[0] = map16b(analogRead(34), 0, 2047, CHANNEL_MIN_100, CHANNEL_MAX_100); // Roll A
+		// Channel_data[1] = map16b(analogRead(35), 0, 2047, CHANNEL_MIN_100, CHANNEL_MAX_100); // Pith E
+		// Channel_data[2] = map16b(analogRead(36), 0, 2047, CHANNEL_MIN_100, CHANNEL_MAX_100); // Thro T
+		// Channel_data[3] = map16b(analogRead(39), 0, 2047, CHANNEL_MIN_100, CHANNEL_MAX_100); // Yaw  R
+
+		Channel_data[0] = analogRead(36)>>1; // Roll A
+		Channel_data[1] = analogRead(39)>>1; // Pith E
+		Channel_data[2] = analogRead(34)>>1; // Thro T
+		Channel_data[3] = analogRead(35)>>1; // Yaw  R
+
 	#else
 		Channel_data[0] = 1023; // Roll A
 		Channel_data[1] = 1023; // Pith E
@@ -511,15 +515,10 @@ void loop() {
 	#endif
 
 	// TX_MAIN_PAUSE_on;
-
-	// delay(BAYANG_callback()/1000.0);
-	// delay(ReadFrSky_2way()/1000.0);
+	CALLBACK_RF; // config.h
+	// TX_MAIN_PAUSE_off;
 
 	//Serial.printf("%d,\t%d,\t%d,\t%d,\t%d,\n",telemetry_link,TX_RSSI,TX_LQI,packet_count,state);
-
-	// delay(ReadDsm() / 1000.0);
-
-	// TX_MAIN_PAUSE_off;
 }
 
 #ifdef USE_WIFI

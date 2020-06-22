@@ -1,6 +1,9 @@
 // #include "FrskyCommon.h"
 // #include "CC2500.h"
 //
+
+#ifdef FRSKYD_CC2500_INO
+
 static void __attribute__((unused)) frsky2way_init(uint8_t bind)
 {
 	FRSKY_init_cc2500(FRSKYD_cc2500_conf);
@@ -183,3 +186,5 @@ uint16_t ReadFrSky_2way()
 	}
 	return state == FRSKY_DATA4 ? 7500 : 9000;
 }
+
+#endif
